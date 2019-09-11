@@ -227,6 +227,7 @@ class Pipeline:
             try:
                 logging_data = pickle.load(f_logging_data)
                 subset_data = logging_data[::10]
+                print(subset_data)
                 os.remove(path_to_pkl)
                 with open(path_to_pkl, "wb") as f_subset:
                     try:
@@ -240,7 +241,7 @@ class Pipeline:
             except Exception as e:
                 # print("CANNOT READ %s"%path_to_pkl)
                 print("----------------------------")
-                print("Error occurs when READING pickles when down sampling for inter {0}".format(i))
+                print("Error occurs when READING pickles when down sampling for inter {0}, {1}".format(i, f_logging_data))
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
                 print("----------------------------")
 

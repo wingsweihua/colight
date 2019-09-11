@@ -322,7 +322,6 @@ class CoLightAgent(Agent):
         -output: out: [batch,agent,action], att:[batch,layers,agent,head,neighbors]
         '''
         act,attention=self.action_att_predict([state])
-        print('first_layer,first_agent,first_head:',attention[0][0][0][0])
         return act[0],attention[0] 
 
 
