@@ -1,6 +1,19 @@
 # CoLight
 
-CoLight is a reinforcement learning agent for network-level traffic signal control. Usage and more information can be found below.
+CoLight is a reinforcement learning agent for network-level traffic signal control. 
+
+@inproceedings{colight,
+ author = {Wei, Hua and Xu, Nan and Zhang, Huichu and Zheng, Guanjie and Zang, Xinshi and Chen, Chacha and Zhang, Weinan and Zhu, Yamin and Xu, Kai and Li, Zhenhui},
+ title = {CoLight: Learning Network-level Cooperation for Traffic Signal Control},
+ booktitle = {Proceedings of the 28th ACM International Conference on Information and Knowledge Management},
+ series = {CIKM '19},
+ year = {2019},
+ location = {Beijing, China}
+} 
+
+It shares the similar code structure with PressLight ([PressLight: Learning Max Pressure Control to Coordinate Traffic Signals in Arterial Network](http://personal.psu.edu/hzw77/publications/presslight-kdd19.pdf)) from KDD 2019.
+
+Usage and more information can be found below.
 
 ## Usage
 
