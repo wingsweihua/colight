@@ -1,0 +1,10 @@
+<edges>
+<edge id="edge-inter0_0.nodeN-inter0_0" from="inter0_0.nodeN" to="inter0_0" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0.nodeE-inter0_0" from="inter0_0.nodeE" to="inter0_0" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0.nodeS-inter0_0" from="inter0_0.nodeS" to="inter0_0" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0.nodeW-inter0_0" from="inter0_0.nodeW" to="inter0_0" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0-inter0_0.nodeN" from="inter0_0" to="inter0_0.nodeN" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0-inter0_0.nodeE" from="inter0_0" to="inter0_0.nodeE" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0-inter0_0.nodeS" from="inter0_0" to="inter0_0.nodeS" numLanes="2" width="3" type="unitype" />
+<edge id="edge-inter0_0-inter0_0.nodeW" from="inter0_0" to="inter0_0.nodeW" numLanes="2" width="3" type="unitype" />
+</edges>

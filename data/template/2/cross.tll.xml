@@ -1,0 +1,12 @@
+<additional> 
+    <vType id="Car" accel="2.0" decel="4.5" sigma="0" tau="1.5" length="5" minGap="2.5" maxSpeed="11.111" guiShape="passenger"/>
+
+    <tlLogic id="node0" type="static" programID="1" offset="0">
+        <phase duration="100000" state="grrrgGGGgrrrgGGG"/>
+        <phase duration="100000" state="gGGGgrrrgGGGgrrr"/>
+    </tlLogic>
+    <tlLogic id="node1" type="static" programID="1" offset="0">
+        <phase duration="100000" state="grrrgGGGgrrrgGGG"/>
+        <phase duration="100000" state="gGGGgrrrgGGGgrrr"/>
+    </tlLogic>
+</additional>

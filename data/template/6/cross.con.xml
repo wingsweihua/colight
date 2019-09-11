@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<connections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
+	<connection from="edge-left-0" to="edge-0-up" fromLane="2" toLane="2" />
+    <connection from="edge-left-0" to="edge-0-1" fromLane="0" toLane="0" />
+    <connection from="edge-left-0" to="edge-0-1" fromLane="1" toLane="1" />
+    <connection from="edge-left-0" to="edge-0-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-0" to="edge-0-1" fromLane="2" toLane="2" />
+    <connection from="edge-up-0" to="edge-0-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-0" to="edge-0-down" fromLane="1" toLane="1" />
+    <connection from="edge-up-0" to="edge-0-left" fromLane="0" toLane="0" />
+
+    <connection from="edge-1-0" to="edge-0-down" fromLane="2" toLane="2" />
+    <connection from="edge-1-0" to="edge-0-left" fromLane="0" toLane="0" />
+    <connection from="edge-1-0" to="edge-0-left" fromLane="1" toLane="1" />
+    <connection from="edge-1-0" to="edge-0-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-0" to="edge-0-left" fromLane="2" toLane="2" />
+    <connection from="edge-down-0" to="edge-0-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-0" to="edge-0-up" fromLane="1" toLane="1" />
+    <connection from="edge-down-0" to="edge-0-1" fromLane="0" toLane="0" />
+
+
+
+    <connection from="edge-0-1" to="edge-1-up" fromLane="2" toLane="2" />
+    <connection from="edge-0-1" to="edge-1-2" fromLane="0" toLane="0" />
+    <connection from="edge-0-1" to="edge-1-2" fromLane="1" toLane="1" />
+    <connection from="edge-0-1" to="edge-1-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-1" to="edge-1-2" fromLane="2" toLane="2" />
+    <connection from="edge-up-1" to="edge-1-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-1" to="edge-1-down" fromLane="1" toLane="1" />
+    <connection from="edge-up-1" to="edge-1-0" fromLane="0" toLane="0" />
+
+    <connection from="edge-2-1" to="edge-1-down" fromLane="2" toLane="2" />
+    <connection from="edge-2-1" to="edge-1-0" fromLane="0" toLane="0" />
+    <connection from="edge-2-1" to="edge-1-0" fromLane="1" toLane="1" />
+    <connection from="edge-2-1" to="edge-1-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-1" to="edge-1-0" fromLane="2" toLane="2" />
+    <connection from="edge-down-1" to="edge-1-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-1" to="edge-1-up" fromLane="1" toLane="1" />
+    <connection from="edge-down-1" to="edge-1-2" fromLane="0" toLane="0" />
+
+
+
+    <connection from="edge-1-2" to="edge-2-up" fromLane="2" toLane="2" />
+    <connection from="edge-1-2" to="edge-2-3" fromLane="0" toLane="0" />
+    <connection from="edge-1-2" to="edge-2-3" fromLane="1" toLane="1" />
+    <connection from="edge-1-2" to="edge-2-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-2" to="edge-2-3" fromLane="2" toLane="2" />
+    <connection from="edge-up-2" to="edge-2-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-2" to="edge-2-down" fromLane="1" toLane="1" />
+    <connection from="edge-up-2" to="edge-2-1" fromLane="0" toLane="0" />
+
+    <connection from="edge-3-2" to="edge-2-down" fromLane="2" toLane="2" />
+    <connection from="edge-3-2" to="edge-2-1" fromLane="0" toLane="0" />
+    <connection from="edge-3-2" to="edge-2-1" fromLane="1" toLane="1" />
+    <connection from="edge-3-2" to="edge-2-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-2" to="edge-2-1" fromLane="2" toLane="2" />
+    <connection from="edge-down-2" to="edge-2-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-2" to="edge-2-up" fromLane="1" toLane="1" />
+    <connection from="edge-down-2" to="edge-2-3" fromLane="0" toLane="0" />
+
+
+
+    <connection from="edge-2-3" to="edge-3-up" fromLane="2" toLane="2" />
+    <connection from="edge-2-3" to="edge-3-4" fromLane="0" toLane="0" />
+    <connection from="edge-2-3" to="edge-3-4" fromLane="1" toLane="1" />
+    <connection from="edge-2-3" to="edge-3-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-3" to="edge-3-4" fromLane="2" toLane="2" />
+    <connection from="edge-up-3" to="edge-3-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-3" to="edge-3-down" fromLane="1" toLane="1" />
+    <connection from="edge-up-3" to="edge-3-2" fromLane="0" toLane="0" />
+
+    <connection from="edge-4-3" to="edge-3-down" fromLane="2" toLane="2" />
+    <connection from="edge-4-3" to="edge-3-2" fromLane="0" toLane="0" />
+    <connection from="edge-4-3" to="edge-3-2" fromLane="1" toLane="1" />
+    <connection from="edge-4-3" to="edge-3-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-3" to="edge-3-2" fromLane="2" toLane="2" />
+    <connection from="edge-down-3" to="edge-3-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-3" to="edge-3-up" fromLane="1" toLane="1" />
+    <connection from="edge-down-3" to="edge-3-4" fromLane="0" toLane="0" />
+
+
+
+
+    <connection from="edge-3-4" to="edge-4-up" fromLane="2" toLane="2" />
+    <connection from="edge-3-4" to="edge-4-5" fromLane="0" toLane="0" />
+    <connection from="edge-3-4" to="edge-4-5" fromLane="1" toLane="1" />
+    <connection from="edge-3-4" to="edge-4-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-4" to="edge-4-5" fromLane="2" toLane="2" />
+    <connection from="edge-up-4" to="edge-4-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-4" to="edge-4-down" fromLane="1" toLane="1" />
+    <connection from="edge-up-4" to="edge-4-3" fromLane="0" toLane="0" />
+
+    <connection from="edge-5-4" to="edge-4-down" fromLane="2" toLane="2" />
+    <connection from="edge-5-4" to="edge-4-3" fromLane="0" toLane="0" />
+    <connection from="edge-5-4" to="edge-4-3" fromLane="1" toLane="1" />
+    <connection from="edge-5-4" to="edge-4-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-4" to="edge-4-3" fromLane="2" toLane="2" />
+    <connection from="edge-down-4" to="edge-4-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-4" to="edge-4-up" fromLane="1" toLane="1" />
+    <connection from="edge-down-4" to="edge-4-5" fromLane="0" toLane="0" />
+
+
+    <connection from="edge-4-5" to="edge-5-up" fromLane="2" toLane="2" />
+    <connection from="edge-4-5" to="edge-5-right" fromLane="0" toLane="0" />
+    <connection from="edge-4-5" to="edge-5-right" fromLane="1" toLane="1" />
+    <connection from="edge-4-5" to="edge-5-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-5" to="edge-5-right" fromLane="2" toLane="2" />
+    <connection from="edge-up-5" to="edge-5-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-5" to="edge-5-down" fromLane="1" toLane="1" />
+    <connection from="edge-up-5" to="edge-5-4" fromLane="0" toLane="0" />
+
+    <connection from="edge-right-5" to="edge-5-down" fromLane="2" toLane="2" />
+    <connection from="edge-right-5" to="edge-5-4" fromLane="0" toLane="0" />
+    <connection from="edge-right-5" to="edge-5-4" fromLane="1" toLane="1" />
+    <connection from="edge-right-5" to="edge-5-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-5" to="edge-5-4" fromLane="2" toLane="2" />
+    <connection from="edge-down-5" to="edge-5-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-5" to="edge-5-up" fromLane="1" toLane="1" />
+    <connection from="edge-down-5" to="edge-5-right" fromLane="0" toLane="0" />
+
+</connections>

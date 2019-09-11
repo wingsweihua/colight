@@ -1,0 +1,9 @@
+<additional> 
+    <vType id="Car" accel="2.0" decel="4.5" sigma="0" tau="1.5" length="5" minGap="2.5" maxSpeed="11.111" guiShape="passenger"/>
+     <route id="route1" edges="edge-left-0 edge-0-1 edge-1-right"/> 
+    <route id="route2" edges="edge-right-1 edge-1-0 edge-0-left"/> 
+    <route id="route3" edges="edge-up-0 edge-0-down"/>
+     <route id="route4" edges="edge-down-0 edge-0-up"/> 
+    <route id="route5" edges="edge-up-1 edge-1-down"/>
+     <route id="route6" edges="edge-down-1 edge-1-up"/> 
+</additional>

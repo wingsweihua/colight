@@ -1,0 +1,7 @@
+<nodes>
+<node id="inter0_0" x="300" y="300" type="traffic_light"/>
+<node id="inter0_0.nodeN" x="300" y="600" type="priority"/>
+<node id="inter0_0.nodeE" x="600" y="300" type="priority"/>
+<node id="inter0_0.nodeS" x="300" y="0" type="priority"/>
+<node id="inter0_0.nodeW" x="0" y="300" type="priority"/>
+</nodes>

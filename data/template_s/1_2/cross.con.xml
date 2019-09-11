@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<connections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
+	<connection from="edge-left-0" to="edge-0-up" fromLane="0" toLane="0" />
+    <connection from="edge-left-0" to="edge-0-1" fromLane="0" toLane="0" />
+    <connection from="edge-left-0" to="edge-0-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-0" to="edge-0-1" fromLane="0" toLane="0" />
+    <connection from="edge-up-0" to="edge-0-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-0" to="edge-0-left" fromLane="0" toLane="0" />
+
+    <connection from="edge-1-0" to="edge-0-down" fromLane="0" toLane="0" />
+    <connection from="edge-1-0" to="edge-0-left" fromLane="0" toLane="0" />
+    <connection from="edge-1-0" to="edge-0-up" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-0" to="edge-0-left" fromLane="0" toLane="0" />
+    <connection from="edge-down-0" to="edge-0-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-0" to="edge-0-1" fromLane="0" toLane="0" />
+
+
+
+    <connection from="edge-0-1" to="edge-1-up" fromLane="0" toLane="0" />
+    <connection from="edge-0-1" to="edge-1-right" fromLane="0" toLane="0" />
+    <connection from="edge-0-1" to="edge-1-down" fromLane="0" toLane="0" />
+
+    <connection from="edge-up-1" to="edge-1-right" fromLane="0" toLane="0" />
+    <connection from="edge-up-1" to="edge-1-down" fromLane="0" toLane="0" />
+    <connection from="edge-up-1" to="edge-1-0" fromLane="0" toLane="0" />
+
+    <connection from="edge-down-1" to="edge-1-0" fromLane="0" toLane="0" />
+    <connection from="edge-down-1" to="edge-1-up" fromLane="0" toLane="0" />
+    <connection from="edge-down-1" to="edge-1-right" fromLane="0" toLane="0" />
+
+    <connection from="edge-right-1" to="edge-1-down" fromLane="0" toLane="0" />
+    <connection from="edge-right-1" to="edge-1-0" fromLane="0" toLane="0" />
+    <connection from="edge-right-1" to="edge-1-up" fromLane="0" toLane="0" />
+
+
+</connections>

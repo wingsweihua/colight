@@ -1,0 +1,8 @@
+<tlLogics>
+<tlLogic id="inter0_0" type="static" programID="0" offset="0">
+<phase duration = "1000000" state = "rGrG" />
+<phase duration = "4" state = "yyyy" />
+<phase duration = "1000000" state = "GrGr" />
+<phase duration = "4" state = "yyyy" />
+</tlLogic>
+</tlLogics>

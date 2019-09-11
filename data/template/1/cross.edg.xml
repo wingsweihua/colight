@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="
+http://sumo.dlr.de/xsd/edges_file.xsd">
+
+
+   <edge id="edget1-1" from="t1" to="1" numLanes="1" width="3" type="from_terminal" />
+   <edge id="edge1-t1" from="1" to="t1" numLanes="1" width="3" type="to_terminal" />
+   <edge id="edge1-0" from="1" to="node0" numLanes="1" width="3" type="go_in_to_junction" />
+   <edge id="edge0-1" from="node0" to="1" numLanes="1" width="3" type="come_out_of_junction" />
+
+   <edge id="edget2-2" from="t2" to="2" numLanes="1" width="3" type="from_terminal" />
+   <edge id="edge2-t2" from="2" to="t2" numLanes="1" width="3" type="to_terminal" />
+   <edge id="edge2-0" from="2" to="node0" numLanes="1" width="3" type="go_in_to_junction" />
+   <edge id="edge0-2" from="node0" to="2" numLanes="1" width="3" type="come_out_of_junction" />
+
+   <edge id="edget3-3" from="t3" to="3" numLanes="1" width="3" type="from_terminal" />
+   <edge id="edge3-t3" from="3" to="t3" numLanes="1" width="3" type="to_terminal" />
+   <edge id="edge3-0" from="3" to="node0" numLanes="1" width="3" type="go_in_to_junction" />
+   <edge id="edge0-3" from="node0" to="3" numLanes="1" width="3" type="come_out_of_junction" />
+
+   <edge id="edget4-4" from="t4" to="4" numLanes="1" width="3" type="from_terminal" />
+   <edge id="edge4-t4" from="4" to="t4" numLanes="1" width="3" type="to_terminal" />
+   <edge id="edge4-0" from="4" to="node0" numLanes="1" width="3" type="go_in_to_junction" />
+   <edge id="edge0-4" from="node0" to="4" numLanes="1" width="3" type="come_out_of_junction" />
+
+</edges>

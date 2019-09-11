@@ -1,0 +1,18 @@
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="cross.net.xml" />
+        <additional-files value="cross.tll.xml"/>
+
+    <route-files value="cross.20160801.0-86400.3701044216_33214.real.xml" /></input>
+
+    <processing>
+        <time-to-teleport value="-1" />
+        <ignore-junction-blocker value="1" />
+    </processing>
+    <report>
+        <verbose value="true" />
+        <no-step-log value="true" />
+    </report>
+
+</configuration>

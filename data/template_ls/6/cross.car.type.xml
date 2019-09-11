@@ -1,0 +1,17 @@
+<additional> 
+     <route id="route1" edges="edge-left-0 edge-0-1 edge-1-2 edge-2-3 edge-3-4 edge-4-5 edge-5-right"/> 
+    <route id="route2" edges="edge-right-5 edge-5-4 edge-4-3 edge-3-2 edge-2-1 edge-1-0 edge-0-left"/> 
+    <route id="route3" edges="edge-up-0 edge-0-down"/>
+     <route id="route4" edges="edge-down-0 edge-0-up"/> 
+    <route id="route5" edges="edge-up-1 edge-1-down"/>
+     <route id="route6" edges="edge-down-1 edge-1-up"/> 
+    <route id="route7" edges="edge-up-2 edge-2-down"/>
+     <route id="route8" edges="edge-down-2 edge-2-up"/> 
+    <route id="route9" edges="edge-up-3 edge-3-down"/>
+     <route id="route10" edges="edge-down-3 edge-3-up"/>
+    <route id="route11" edges="edge-up-4 edge-4-down"/>
+     <route id="route12" edges="edge-down-4 edge-4-up"/> 
+    <route id="route13" edges="edge-up-5 edge-5-down"/>
+     <route id="route14" edges="edge-down-5 edge-5-up"/> 
+
+</additional>

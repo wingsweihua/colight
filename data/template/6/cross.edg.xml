@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="
+http://sumo.dlr.de/xsd/edges_file.xsd">
+
+   <edge id="edge-left-0" from="left" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-0-left" from="node0" to="left" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-0-1" from="node0" to="node1" numLanes="3" width="3" type="go_in_to_junction" />   
+   <edge id="edge-1-0" from="node1" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-up-0" from="node0_up" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-0-up" from="node0" to="node0_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-0" from="node0_down" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-0-down" from="node0" to="node0_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+   <edge id="edge-1-2" from="node1" to="node2" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-2-1" from="node2" to="node1" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-up-1" from="node1_up" to="node1" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-1-up" from="node1" to="node1_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-1" from="node1_down" to="node1" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-1-down" from="node1" to="node1_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+   <edge id="edge-2-3" from="node2" to="node3" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-3-2" from="node3" to="node2" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-up-2" from="node2_up" to="node2" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-2-up" from="node2" to="node2_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-2" from="node2_down" to="node2" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-2-down" from="node2" to="node2_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+   <edge id="edge-3-4" from="node3" to="node4" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-4-3" from="node4" to="node3" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-up-3" from="node3_up" to="node3" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-3-up" from="node3" to="node3_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-3" from="node3_down" to="node3" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-3-down" from="node3" to="node3_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+
+   <edge id="edge-4-5" from="node4" to="node5" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-5-4" from="node5" to="node4" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-up-4" from="node4_up" to="node4" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-4-up" from="node4" to="node4_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-4" from="node4_down" to="node4" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-4-down" from="node4" to="node4_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+   <edge id="edge-up-5" from="node5_up" to="node5" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-5-up" from="node5" to="node5_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-5" from="node5_down" to="node5" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-5-down" from="node5" to="node5_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-right-5" from="right" to="node5" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-5-right" from="node5" to="right" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+
+</edges>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="
+http://sumo.dlr.de/xsd/edges_file.xsd">
+
+   <edge id="edge-left-0" from="left" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-0-left" from="node0" to="left" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-0-1" from="node0" to="node1" numLanes="3" width="3" type="go_in_to_junction" />   
+   <edge id="edge-1-0" from="node1" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-up-0" from="node0_up" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-0-up" from="node0" to="node0_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-0" from="node0_down" to="node0" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-0-down" from="node0" to="node0_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+   <edge id="edge-up-1" from="node1_up" to="node1" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-1-up" from="node1" to="node1_up" numLanes="3" width="3" type="go_in_to_junction" />
+
+   <edge id="edge-down-1" from="node1_down" to="node1" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-1-down" from="node1" to="node1_down" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+   <edge id="edge-right-1" from="right" to="node1" numLanes="3" width="3" type="go_in_to_junction" />
+   <edge id="edge-1-right" from="node1" to="right" numLanes="3" width="3" type="go_in_to_junction" />
+
+
+
+</edges>

@@ -1,0 +1,54 @@
+[
+  {
+    "vehicle": {
+      "length": 2.0,
+      "width": 2.0,
+      "maxAcc": 5.0,
+      "usualAcc": 2.0
+    },
+    "route": [
+      "road_0_1_0",
+      "road_1_1_0"
+    ],
+    "interval": 2
+  },
+  {
+    "vehicle": {
+      "length": 2.0,
+      "width": 2.0,
+      "maxAcc": 5.0,
+      "usualAcc": 2.0
+    },
+    "route": [
+      "road_2_1_2",
+      "road_1_1_2"
+    ],
+    "interval": 2
+  },
+  {
+    "vehicle": {
+      "length": 2.0,
+      "width": 2.0,
+      "maxAcc": 5.0,
+      "usualAcc": 2.0
+    },
+    "route": [
+      "road_1_0_1",
+      "road_1_1_1"
+    ],
+    "interval": 2
+  },
+  {
+    "vehicle": {
+      "length": 2.0,
+      "width": 2.0,
+      "maxAcc": 5.0,
+      "usualAcc": 2.0
+    },
+    "route": [
+      "road_1_2_3",
+      "road_1_1_3"
+    ],
+    "interval": 2
+  }
+]

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types>
+   <type id="go_in_to_junction" priority="78" numLanes="1" speed="11.111"/>
+   <type id="come_out_of_junction" priority="46" numLanes="1" speed="11.111"/>
+   <type id="come_out_of_rd" priority="40" numLanes="1" speed="11.111"/>
+   <type id="come_out_of_rd" priority="40" numLanes="1" speed="11.111"/>
+</types>

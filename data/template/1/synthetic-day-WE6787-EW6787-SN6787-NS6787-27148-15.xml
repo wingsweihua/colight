@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<routes>
+  <flow begin="0" departLane="best" departPos="1" departSpeed="5.0" end="3600" from="edge1-0" id="0" to="edge0-2" type="Car" vehsPerHour="480"/>
+  <flow begin="0" departLane="best" departPos="2" departSpeed="5.0" end="3600" from="edge2-0" id="1" to="edge0-1" type="Car" vehsPerHour="480"/>
+  <flow begin="0" departLane="best" departPos="3" departSpeed="5.0" end="3600" from="edge3-0" id="2" to="edge0-4" type="Car" vehsPerHour="480"/>
+  <flow begin="0" departLane="best" departPos="4" departSpeed="5.0" end="3600" from="edge4-0" id="3" to="edge0-3" type="Car" vehsPerHour="480"/>
+</routes>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="/library/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/library/spinner.css">
+    <script src="/library/pixi.min.js"></script>
+    <script src="/library/axios.min.js"></script>
+    <script type="text/javascript">
+        var roadnetFile = "{{ data.roadnetFile }}";
+        var logFile = "{{ data.logFile }}";
+    </script>
+    <script src="Point.js"></script>
+</head>
+
+<body>
+    <div class="container h-100 pt-4 pb-4">
+        <div class="row h-100">
+            <div class="col-3">
+                <!-- <i class="fas fa-car h2"></i> -->
+                <h2 class="pb-3">Status Panel</h2>
+                <table class="table table-borderless table-hover">
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="pl-0">当前车辆数</th>
+                            <td id="car-num">0</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="pl-0">模拟总步数</th>
+                            <td id="total-step-num">0</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="pl-0">当前模拟步数</th>
+                            <td id="current-step-num">0</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="pl-0">当前进度</th>
+                            <td id="progress-percentage">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h5>Navigation Keys</h5>
+                <div>
+                    <kbd class="bg-secondary">left</kbd>
+                    <kbd class="bg-secondary">right</kbd>
+                    <kbd class="bg-secondary">up</kbd>
+                    <kbd class="bg-secondary">down</kbd>
+                    <kbd class="bg-secondary">-</kbd>
+                    <kbd class="bg-secondary">=</kbd>
+                    <kbd class="bg-secondary">p(pause)</kbd>
+                    <kbd class="bg-secondary">1(slowdown)</kbd>
+                    <kbd class="bg-secondary">2(speedup)</kbd>
+                </div>
+                <h5 class="mt-4">Info Box</h5>
+                <div id="info"></div>
+            </div>
+            <div class="col-9 h-100 d-flex flex-column">
+                <h2 class="border-bottom pb-3">City Simulator</h2>
+                <div id="simulator-canvas" class="flex-grow-1">
+                    <div id="spinner" class="spinner">
+                        <div class="rect1"></div>
+                        <div class="rect2"></div>
+                        <div class="rect3"></div>
+                        <div class="rect4"></div>
+                        <div class="rect5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+<routes>
+    <flow id="01" type="Car" begin="0" end="72000" number="14000" from="edge-left-0" to="edge-1-right" departPos="0" departLane="best" departSpeed="0"/>
+    <flow id="02" type="Car" begin="0" end="72000" number="14000" from="edge-right-1" to="edge-0-left" departPos="0" departLane="best" departSpeed="0"/>
+    <flow id="03" type="Car" begin="0" end="72000" number="8400" from="edge-up-0" to="edge-0-down" departPos="0" departLane="best" departSpeed="0"/>
+    <flow id="04" type="Car" begin="0" end="72000" number="8400" from="edge-down-0" to="edge-0-up" departPos="0" departLane="best" departSpeed="0"/>
+    <flow id="05" type="Car" begin="0" end="72000" number="8400" from="edge-up-1" to="edge-1-down" departPos="0" departLane="best" departSpeed="0"/>
+    <flow id="06" type="Car" begin="0" end="72000" number="8400" from="edge-down-1" to="edge-1-up" departPos="0" departLane="best" departSpeed="0"/>
+</routes>

@@ -1,0 +1,6 @@
+<connections>
+<connection from="edge-inter0_0.nodeN-inter0_0" to="edge-inter0_0-inter0_0.nodeS" fromLane="0" toLane="0" />
+<connection from="edge-inter0_0.nodeE-inter0_0" to="edge-inter0_0-inter0_0.nodeW" fromLane="0" toLane="0" />
+<connection from="edge-inter0_0.nodeS-inter0_0" to="edge-inter0_0-inter0_0.nodeN" fromLane="0" toLane="0" />
+<connection from="edge-inter0_0.nodeW-inter0_0" to="edge-inter0_0-inter0_0.nodeE" fromLane="0" toLane="0" />
+</connections>
