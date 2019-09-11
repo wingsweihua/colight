@@ -29,7 +29,7 @@ We recommend to run the code through docker. Some brief documentation can be fou
 
 2. Please run the built docker image to initiate a docker container. Please remember to mount the code directory.
 
-``sudo docker run -itd -v /home/weihua/workspace_hua/RLSignal_multi/:/colight/ --shm-size=8gb --name hua_colight simulator-test:latest /bin/bash``
+``sudo docker run -itd -v /path/to/your/workspace/colight/:/colight/ --shm-size=8gb --name hua_colight simulator-test:latest /bin/bash``
 
 ``cd colight``
 
