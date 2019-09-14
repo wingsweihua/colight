@@ -33,7 +33,7 @@ We recommend to run the code through docker. Some brief documentation can be fou
 
 3. Please run the built docker image to initiate a docker container. Please remember to mount the code directory.
 
-``sudo docker run -itd -v /path/to/your/workspace/colight/:/colight/ --shm-size=8gb --name hua_colight hzw77/colight:v0.1 /bin/bash``
+``sudo docker run -it -v /path/to/your/workspace/colight/:/colight/ --shm-size=8gb --name hua_colight hzw77/colight:v0.1 /bin/bash``
 
 ``cd colight``
 
