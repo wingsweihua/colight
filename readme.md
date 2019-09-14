@@ -28,7 +28,7 @@ We recommend to run the code through docker. Some brief documentation can be fou
 ``sudo docker pull hzw77/colight:v0.1``
 
 2. Pull the codes for CoLight.
-``git clone https://github.com/wingsweihua/colight``
+``git clone https://github.com/wingsweihua/colight.git``
 
 
 3. Please run the built docker image to initiate a docker container. Please remember to mount the code directory.
