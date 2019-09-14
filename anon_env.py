@@ -1,3 +1,7 @@
+'''
+Interactions with CityFlow, get/set values from CityFlow, pass it to RL agents
+'''
+
 import pickle
 import numpy as np
 import json
@@ -732,6 +736,7 @@ class Intersection:
         return self.dic_feature
 
     def get_state(self, list_state_features):
+        # customize your own state
         # print(list_state_features)
         # print(self.dic_feature)
         dic_state = {state_feature_name: self.dic_feature[state_feature_name] for state_feature_name in list_state_features}
@@ -739,7 +744,7 @@ class Intersection:
         return dic_state
 
     def get_reward(self, dic_reward_info):
-
+        # customize your own reward
         dic_reward = dict()
         dic_reward["flickering"] = None
         dic_reward["sum_lane_queue_length"] = None
@@ -1051,7 +1056,6 @@ class AnonEnv:
         return list_feature
 
     def get_state(self):
-
         # consider neighbor info
         list_state = [inter.get_state(self.dic_traffic_env_conf["LIST_STATE_FEATURE"]) for inter in self.list_intersection]
         done = self._check_episode_done(list_state)

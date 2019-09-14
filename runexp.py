@@ -25,10 +25,14 @@ ANON_PHASE_REPRE=[]
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    # The file folder to create/log in
     parser.add_argument("--memo", type=str, default='0515_afternoon_Colight_6_6_bi')#1_3,2_2,3_3,4_4
-    parser.add_argument("--env", type=int, default=1)
+    parser.add_argument("--env", type=int, default=1) #env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
-    parser.add_argument("--road_net", type=str, default='6_6')#'1_2')
+    parser.add_argument("--road_net", type=str, default='6_6')#'1_2') # which road net you are going to run
+    parser.add_argument("--volume", type=str, default='300')#'300'
+    parser.add_argument("--suffix", type=str, default="0.3_bi")#0.3
+
     global hangzhou_archive
     hangzhou_archive=False
     global TOP_K_ADJACENCY
@@ -42,13 +46,12 @@ def parse_args():
     global NEIGHBOR
     # TAKE CARE
     NEIGHBOR=False
-    global SAVEREPLAY
+    global SAVEREPLAY # if you want to relay your simulation, set it to be True
     SAVEREPLAY=False
     global ADJACENCY_BY_CONNECTION_OR_GEO
     # TAKE CARE
     ADJACENCY_BY_CONNECTION_OR_GEO=False
-    parser.add_argument("--volume", type=str, default='300')#'300'
-    parser.add_argument("--suffix", type=str, default="0.3_bi")#0.3
+
     #modify:TOP_K_ADJACENCY in line 154
     global PRETRAIN
     PRETRAIN=False
@@ -117,10 +120,10 @@ def check_all_workers_working(list_cur_p):
     return -1
 
 def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):
-    ppl = Pipeline(dic_exp_conf=dic_exp_conf,
-                   dic_agent_conf=dic_agent_conf,
-                   dic_traffic_env_conf=dic_traffic_env_conf,
-                   dic_path=dic_path
+    ppl = Pipeline(dic_exp_conf=dic_exp_conf, # experiment config
+                   dic_agent_conf=dic_agent_conf, # RL agent config
+                   dic_traffic_env_conf=dic_traffic_env_conf, # the simolation configuration
+                   dic_path=dic_path # where should I save the logs?
                    )
     global multi_process
     ppl.run(multi_process=multi_process)
