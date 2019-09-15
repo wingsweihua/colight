@@ -60,7 +60,7 @@ For most cases, you might only modify traffic files and config parameters in ``r
 
 * real-world data
 
-  Traffic file and road networks of New York City can be found in ``data/NewYork``. Jinan and Hangzhou dataset will be included once granted.
+  Traffic file and road networks of New York City can be found in ``data/NewYork``, it contains two networks at different scale: 196 intersection and 48 intersections. Jinan and Hangzhou dataset are also included.
 
 
 
