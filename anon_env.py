@@ -171,8 +171,8 @@ class Intersection:
 
         self.dic_entering_approach_to_edge = {"W": "road_{0}_{1}_0".format(inter_id[0] - 1, inter_id[1])}
         self.dic_entering_approach_to_edge.update({"E": "road_{0}_{1}_2".format(inter_id[0] + 1, inter_id[1])})
-        self.dic_entering_approach_to_edge.update({"N": "road_{0}_{1}_1".format(inter_id[0], inter_id[1] - 1)})
-        self.dic_entering_approach_to_edge.update({"S": "road_{0}_{1}_3".format(inter_id[0], inter_id[1] + 1)})
+        self.dic_entering_approach_to_edge.update({"S": "road_{0}_{1}_1".format(inter_id[0], inter_id[1] - 1)})
+        self.dic_entering_approach_to_edge.update({"N": "road_{0}_{1}_3".format(inter_id[0], inter_id[1] + 1)})
 
         self.dic_exiting_approach_to_edge = {
             approach: "road_{0}_{1}_{2}".format(inter_id[0], inter_id[1], self.dic_approach_to_node[approach]) for
