@@ -1,15 +1,10 @@
 import config
 import copy
 from pipeline import Pipeline
-import os
 import time
 from multiprocessing import Process
 import argparse
 import os
-import matplotlib
-# matplotlib.use('TkAgg')
-
-from script import get_traffic_volume
 
 multi_process = True
 TOP_K_ADJACENCY=-1
@@ -23,15 +18,16 @@ ADJACENCY_BY_CONNECTION_OR_GEO=False
 hangzhou_archive=True
 ANON_PHASE_REPRE=[]
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     # The file folder to create/log in
-    parser.add_argument("--memo", type=str, default='0515_afternoon_Colight_6_6_bi')#1_3,2_2,3_3,4_4
-    parser.add_argument("--env", type=int, default=1) #env=1 means you will run CityFlow
+    parser.add_argument("--memo", type=str, default='0316')  # 1_3,2_2,3_3,4_4
+    parser.add_argument("--env", type=int, default=1)  # env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
-    parser.add_argument("--road_net", type=str, default='6_6')#'1_2') # which road net you are going to run
-    parser.add_argument("--volume", type=str, default='300')#'300'
-    parser.add_argument("--suffix", type=str, default="0.3_bi")#0.3
+    parser.add_argument("--road_net", type=str, default='3_3')  # which road net you are going to run
+    parser.add_argument("--volume", type=str, default='300')  # '300'
+    parser.add_argument("--suffix", type=str, default="0.3_bi")  # 0.3
 
     global hangzhou_archive
     hangzhou_archive=False
@@ -55,9 +51,9 @@ def parse_args():
     #modify:TOP_K_ADJACENCY in line 154
     global PRETRAIN
     PRETRAIN=False
-    parser.add_argument("--mod", type=str, default='CoLight')#SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
-    parser.add_argument("--cnt",type=int, default=3600)#3600
-    parser.add_argument("--gen",type=int, default=4)#4
+    parser.add_argument("--mod", type=str, default='CoLight')  # SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
+    parser.add_argument("--cnt", type=int, default=3600)  # 3600
+    parser.add_argument("--gen", type=int, default=4)  # 4
 
     parser.add_argument("-all", action="store_true", default=False)
     parser.add_argument("--workers",type=int, default=7)
@@ -106,11 +102,13 @@ def memo_rename(traffic_file_list):
     new_name = new_name[:-1]
     return new_name
 
+
 def merge(dic_tmp, dic_to_change):
     dic_result = copy.deepcopy(dic_tmp)
     dic_result.update(dic_to_change)
 
     return dic_result
+
 
 def check_all_workers_working(list_cur_p):
     for i in range(len(list_cur_p)):
@@ -118,6 +116,7 @@ def check_all_workers_working(list_cur_p):
             return i
 
     return -1
+
 
 def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):
     ppl = Pipeline(dic_exp_conf=dic_exp_conf, # experiment config
@@ -132,7 +131,6 @@ def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_pat
     return
 
 
-
 def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers, onemodel):
 
     # main(args.memo, args.env, args.road_net, args.gui, args.volume, args.ratio, args.mod, args.cnt, args.gen)
@@ -140,15 +138,14 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
     NUM_COL = int(road_net.split('_')[0])
     NUM_ROW = int(road_net.split('_')[1])
     num_intersections = NUM_ROW * NUM_COL
-    print('num_intersections:',num_intersections)
+    print('num_intersections:', num_intersections)
 
     ENVIRONMENT = ["sumo", "anon"][env]
 
     if r_all:
-        traffic_file_list = [ENVIRONMENT+"_"+road_net+"_%d_%s" %(v,suffix) for v in range(100,400,100)]
+        traffic_file_list = [ENVIRONMENT+"_"+road_net+"_%d_%s" % (v, suffix) for v in range(100, 400, 100)]
     else:
         traffic_file_list=["{0}_{1}_{2}_{3}".format(ENVIRONMENT, road_net, volume, suffix)]
-
 
     if env:
         traffic_file_list = [i+ ".json" for i in traffic_file_list ]
@@ -193,8 +190,9 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "MAX_MEMORY_LEN": 10000,
             "UPDATE_Q_BAR_EVERY_C_ROUND": False,
             "UPDATE_Q_BAR_FREQ": 5,
+            "MERGE": "multiply",
             # network
-
+            "ROTATION": True,
             "N_LAYER": 2,
             "TRAFFIC_FILE": traffic_file,
         }
@@ -223,8 +221,6 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
 
             "NEIGHBOR": NEIGHBOR,
             "MODEL_NAME": mod,
-
-
 
             "SAVEREPLAY": SAVEREPLAY,
             "NUM_ROW": NUM_ROW,
@@ -258,7 +254,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # "vehicle_speed_img",
                 # "vehicle_acceleration_img",
                 # "vehicle_waiting_time_img",
-                "lane_num_vehicle",
+                # "lane_num_vehicle",
                 # "lane_num_vehicle_been_stopped_thres01",
                 # "lane_num_vehicle_been_stopped_thres1",
                 # "lane_queue_length",
@@ -269,7 +265,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # "coming_vehicle",
                 # "leaving_vehicle",
                 # "pressure"
-
+                "pressure_of_movement",
                 # "adjacency_matrix",
                 # "lane_queue_length",
                 # "connectivity",
@@ -277,40 +273,39 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # adjacency_matrix_lane
             ],
 
-                "DIC_FEATURE_DIM": dict(
-                    D_LANE_QUEUE_LENGTH=(4,),
-                    D_LANE_NUM_VEHICLE=(4,),
+            "DIC_FEATURE_DIM": dict(
+                D_LANE_QUEUE_LENGTH=(4,),
+                D_LANE_NUM_VEHICLE=(4,),
 
-                    D_COMING_VEHICLE = (12,),
-                    D_LEAVING_VEHICLE = (12,),
+                D_COMING_VEHICLE=(12,),
+                D_LEAVING_VEHICLE=(12,),
 
-                    D_LANE_NUM_VEHICLE_BEEN_STOPPED_THRES1=(4,),
-                    D_CUR_PHASE=(1,),
-                    D_NEXT_PHASE=(1,),
-                    D_TIME_THIS_PHASE=(1,),
-                    D_TERMINAL=(1,),
-                    D_LANE_SUM_WAITING_TIME=(4,),
-                    D_VEHICLE_POSITION_IMG=(4, 60,),
-                    D_VEHICLE_SPEED_IMG=(4, 60,),
-                    D_VEHICLE_WAITING_TIME_IMG=(4, 60,),
+                D_LANE_NUM_VEHICLE_BEEN_STOPPED_THRES1=(4,),
+                D_CUR_PHASE=(1,),
+                D_NEXT_PHASE=(1,),
+                D_TIME_THIS_PHASE=(1,),
+                D_TERMINAL=(1,),
+                D_LANE_SUM_WAITING_TIME=(4,),
+                D_VEHICLE_POSITION_IMG=(4, 60,),
+                D_VEHICLE_SPEED_IMG=(4, 60,),
+                D_VEHICLE_WAITING_TIME_IMG=(4, 60,),
 
-                    D_PRESSURE=(1,),
+                D_PRESSURE=(1,),
+                D_PRESSURE_OF_MOVEMENT=(8,),
+                D_ADJACENCY_MATRIX=(2,),
 
-                    D_ADJACENCY_MATRIX=(2,),
-
-                    D_ADJACENCY_MATRIX_LANE=(6,),
-
+                D_ADJACENCY_MATRIX_LANE=(6,),
                 ),
 
             "DIC_REWARD_INFO": {
-                "flickering": 0,#-5,#
+                "flickering": 0,  # -5
                 "sum_lane_queue_length": 0,
                 "sum_lane_wait_time": 0,
-                "sum_lane_num_vehicle_left": 0,#-1,#
+                "sum_lane_num_vehicle_left": 0,  # -1
                 "sum_duration_vehicle_left": 0,
                 "sum_num_vehicle_been_stopped_thres01": 0,
-                "sum_num_vehicle_been_stopped_thres1": -0.25,
-                "pressure": 0  # -0.25
+                "sum_num_vehicle_been_stopped_thres1": 0,  # -0.25,
+                "pressure": -0.25
             },
 
             "LANE_NUM": {
@@ -319,12 +314,14 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 "STRAIGHT": 1
             },
 
+            "list_lane_order": ["WL", "WT", "EL", "ET", "NL", "NT", "SL", "ST"],
+
             "PHASE": {
                 "sumo": {
-                    0: [0, 1, 0, 1, 0, 0, 0, 0],# 'WSES',
-                    1: [0, 0, 0, 0, 0, 1, 0, 1],# 'NSSS',
-                    2: [1, 0, 1, 0, 0, 0, 0, 0],# 'WLEL',
-                    3: [0, 0, 0, 0, 1, 0, 1, 0]# 'NLSL',
+                    0: [0, 1, 0, 1, 0, 0, 0, 0],  # 'WSES',
+                    1: [0, 0, 0, 0, 0, 1, 0, 1],  # 'NSSS',
+                    2: [1, 0, 1, 0, 0, 0, 0, 0],  # 'WLEL',
+                    3: [0, 0, 0, 0, 1, 0, 1, 0]   # 'NLSL',
                 },
 
                 # "anon": {
@@ -340,7 +337,16 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 #     # 'NSNL',
                 #     # 'SSSL',
                 # },
-                "anon":ANON_PHASE_REPRE,
+                "anon": [
+                    'WT_ET',
+                    'NT_ST',
+                    'WL_EL',
+                    'NL_SL',
+                    'WL_WT',
+                    'EL_ET',
+                    'SL_ST',
+                    'NL_NT',
+                ],
                 # "anon": {
                 #     # 0: [0, 0, 0, 0, 0, 0, 0, 0],
                 #     1: [0, 1, 0, 1, 0, 0, 0, 0],# 'WSES',
@@ -360,17 +366,17 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
         ## ==================== multi_phase ====================
         global hangzhou_archive
         if hangzhou_archive:
-            template='Archive+2'
-        elif volume=='jinan':
-            template="Jinan"
-        elif volume=='hangzhou':
-            template='Hangzhou'
-        elif volume=='newyork':
-            template='NewYork'
-        elif volume=='chacha':
-            template='Chacha'
-        elif volume=='dynamic_attention':
-            template='dynamic_attention'
+            template = 'Archive+2'
+        elif volume == 'jinan':
+            template = "Jinan"
+        elif volume == 'hangzhou':
+            template = 'Hangzhou'
+        elif volume == 'newyork':
+            template = 'NewYork'
+        elif volume == 'chacha':
+            template = 'Chacha'
+        elif volume == 'dynamic_attention':
+            template = 'dynamic_attention'
         elif dic_traffic_env_conf_extra["LANE_NUM"] == config._LS:
             template = "template_ls"
         elif dic_traffic_env_conf_extra["LANE_NUM"] == config._S:
@@ -433,7 +439,6 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 dic_traffic_env_conf_extra['DIC_FEATURE_DIM']['D_CUR_PHASE_3'] = (1,)
                 dic_traffic_env_conf_extra['DIC_FEATURE_DIM']['D_LANE_NUM_VEHICLE_3'] = (4,)
 
-
         print(traffic_file)
         prefix_intersections = str(road_net)
         dic_path_extra = {
@@ -488,7 +493,6 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
 
 if __name__ == "__main__":
     args = parse_args()
-    #memo = "multi_phase/optimal_search_new/new_headway_anon"
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
 

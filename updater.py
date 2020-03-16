@@ -24,25 +24,24 @@ class Updater:
         self.sample_set_list = []
         self.sample_indexes = None
 
-
-        #temporay path_to_log
-        self.path_to_log=os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round", "round_0", "generator_0")
+        # temporary path_to_log
+        self.path_to_log = os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round", "round_0", "generator_0")
         env_tmp = DIC_ENVS[dic_traffic_env_conf["SIMULATOR_TYPE"]](
-                              path_to_log = self.path_to_log,
-                              path_to_work_directory = self.dic_path["PATH_TO_WORK_DIRECTORY"],
-                              dic_traffic_env_conf = self.dic_traffic_env_conf)        
+                              path_to_log=self.path_to_log,
+                              path_to_work_directory=self.dic_path["PATH_TO_WORK_DIRECTORY"],
+                              dic_traffic_env_conf=self.dic_traffic_env_conf)
         env_tmp.reset()
 
         for i in range(dic_traffic_env_conf['NUM_AGENTS']):
             agent_name = self.dic_exp_conf["MODEL_NAME"]
             if agent_name=='CoLight_Signal':
-                agent= DIC_AGENTS[agent_name](
+                agent = DIC_AGENTS[agent_name](
                     self.dic_agent_conf, self.dic_traffic_env_conf,
                     self.dic_path, self.cnt_round, 
                     inter_info=env_tmp.list_intersection,
                     intersection_id=str(i))
             else:
-                agent= DIC_AGENTS[agent_name](
+                agent = DIC_AGENTS[agent_name](
                     self.dic_agent_conf, self.dic_traffic_env_conf,
                     self.dic_path, self.cnt_round, intersection_id=str(i))
             self.agents.append(agent)
@@ -133,7 +132,6 @@ class Updater:
             pass
         return hidden_states_set
 
-
     def load_sample_with_forget(self, i):
         '''
         Load sample for each intersection, with forget
@@ -186,7 +184,6 @@ class Updater:
         if i %100 == 0:
             print("load_sample for inter {0}".format(i))
         return sample_set
-
 
     def load_sample_for_agents(self):
         # TODO should be number of agents
@@ -277,7 +274,6 @@ class Updater:
         samples_set_df.drop(['state','action','next_state','inst_reward','reward'], axis=1, inplace=True)
         self.sample_set_list.append(samples_set_df)
 
-
     def update_network(self,i):
         print('update agent %d'%i)
         self.agents[i].train_network(self.dic_exp_conf)
@@ -320,8 +316,6 @@ class Updater:
             print("update_network_for_agents", self.dic_traffic_env_conf['NUM_AGENTS'])
             for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
                 self.update_network(i)
-
-
 
 
 

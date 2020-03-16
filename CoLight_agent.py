@@ -2,6 +2,7 @@ import numpy as np
 import os 
 import pickle  
 from agent import Agent
+from network_agent import Selector
 import random 
 import time
 """
@@ -15,15 +16,29 @@ import tensorflow as tf
 from keras.layers import Dense, Dropout, Conv2D, Input, Lambda, Flatten, TimeDistributed, merge
 from keras.layers import Add, Reshape, MaxPooling2D, Concatenate, Embedding, RepeatVector
 from keras.models import Model, model_from_json, load_model
+from keras.layers.merge import concatenate, add, dot, maximum, multiply
 from keras.layers.core import Activation
 from keras.utils import np_utils,to_categorical
 from keras.engine.topology import Layer
 from keras.callbacks import EarlyStopping, TensorBoard
-
+from frap import slice_tensor, relation
 # SEED=6666
 # random.seed(SEED)
 # np.random.seed(SEED)
 # tf.set_random_seed(SEED)
+
+
+def slice_icap(x, name=None):
+    if name == 'phase':
+        return x[:, :, :8]
+    elif name == 'num_vehicle':
+        return x[:, :, 8:]
+    else:
+        print('name not included')
+
+
+def slice_icap_2(x, index):
+    return x[:, index, :]
 
 
 class RepeatVector3D(Layer):
@@ -40,19 +55,21 @@ class RepeatVector3D(Layer):
 
         return K.tile(K.expand_dims(inputs,1),[1,self.times,1,1])
 
-
     def get_config(self):
         config = {'times': self.times}
         base_config = super(RepeatVector3D, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+
 class CoLightAgent(Agent): 
-    def __init__(self, 
-        dic_agent_conf=None, 
-        dic_traffic_env_conf=None, 
-        dic_path=None, 
-        cnt_round=None, 
-        best_round=None, bar_round=None,intersection_id="0"):
+    def __init__(
+            self,
+            dic_agent_conf=None,
+            dic_traffic_env_conf=None,
+            dic_path=None,
+            cnt_round=None,
+            best_round=None, bar_round=None,intersection_id="0"
+    ):
         """
         #1. compute the (dynamic) static Adjacency matrix, compute for each state
         -2. #neighbors: 5 (1 itself + W,E,S,N directions)
@@ -109,7 +126,7 @@ class CoLightAgent(Agent):
 
                 else:
                     # not use model pool
-                    #TODO how to load network for multiple intersections?
+                    # TODO how to load network for multiple intersections?
                     # print('init q load')
                     self.load_network("round_{0}_inter_{1}".format(cnt_round-1, self.intersection_id))
                     # print('init q_bar load')
@@ -138,14 +155,12 @@ class CoLightAgent(Agent):
             os.path.join(
                 self.dic_path["PATH_TO_MODEL"], 
                 "round_-1_inter_{0}.h5".format(intersection_id))):
-            #the 0-th model is pretrained model
+            # the 0-th model is pretrained model
             self.dic_agent_conf["EPSILON"] = self.dic_agent_conf["MIN_EPSILON"]
             print('round%d, EPSILON:%.4f'%(cnt_round,self.dic_agent_conf["EPSILON"]))
         else:
             decayed_epsilon = self.dic_agent_conf["EPSILON"] * pow(self.dic_agent_conf["EPSILON_DECAY"], cnt_round)
             self.dic_agent_conf["EPSILON"] = max(decayed_epsilon, self.dic_agent_conf["MIN_EPSILON"])
-        
-
 
     def compute_len_feature(self):
         from functools import reduce
@@ -157,6 +172,8 @@ class CoLightAgent(Agent):
                 len_feature += self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_"+feature_name.upper()]
             elif feature_name=="lane_num_vehicle":
                 len_feature += (self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_"+feature_name.upper()][0]*self.num_lanes,)
+            elif feature_name == "pressure_of_movement":
+                len_feature += self.dic_traffic_env_conf["DIC_FEATURE_DIM"]["D_"+feature_name.upper()]
         return sum(len_feature)
 
     """
@@ -165,24 +182,91 @@ class CoLightAgent(Agent):
     2. CNN layers
     3. q network
     """
-    def MLP(self,In_0,layers=[128,128]):
+    def MLP(self, In_0, layers=[128, 128]):
         """
         Currently, the MLP layer 
         -input: [batch,#agents,feature_dim]
         -outpout: [batch,#agents,128]
         """
         # In_0 = Input(shape=[self.num_agents,self.len_feature])
-        for layer_index,layer_size in enumerate(layers):
-            if layer_index==0:
-                h = Dense(layer_size, activation='relu',kernel_initializer='random_normal',name='Dense_embed_%d'%layer_index)(In_0)
+        for layer_index, layer_size in enumerate(layers):
+            if layer_index == 0:
+                h = Dense(layer_size, activation='relu', kernel_initializer='random_normal', name='Dense_embed_%d' % layer_index)(In_0)
             else:
-                h = Dense(layer_size, activation='relu',kernel_initializer='random_normal',name='Dense_embed_%d'%layer_index)(h)
+                h = Dense(layer_size, activation='relu', kernel_initializer='random_normal', name='Dense_embed_%d' % layer_index)(h)
 
         return h
 
+    def iCAP(self, In, MLP_layers):
+        phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[8], name="inter_phase")(In[0])  # None, 9, 8
+        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[8], name="inter_num_vehicle")(In[0])
+        p = Activation('sigmoid')(Embedding(2, 4, input_length=8)(phase_input))
+        d = Dense(4, activation="sigmoid", name="num_vec_mapping")
+        lane_embedding = Dense(16, activation="relu", name="lane_embedding")
+        relation_embed = Embedding(2, 4, name="relation_embedding")
+        _lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu", name="lane_conv")
+        _relation_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
+                                name="relation_conv")
+        _combine_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
+                               name="combine_conv")
+        _before_merge = Conv2D(1, kernel_size=(1, 1), activation="linear", name="befor_merge")
 
+        for slice_ind in range(self.num_agents):
+            phase_slice = Lambda(slice_icap_2, arguments={'index': slice_ind}, output_shape=[8, ] + [4],
+                                 name="inter_phase_%d" % slice_ind)(p)  # make this None 8 4
+            num_vehicle_slice = Lambda(slice_icap_2, arguments={'index': slice_ind}, output_shape=[8],
+                                       name="inter_num_vehicle_%d" % slice_ind)(num_vehicle_input)  # make this None 8
+            dic_lane = {}
+            for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
+                tmp_vec = d(
+                    Lambda(slice_tensor, arguments={"index": i}, name="vec_%d_%d" % (i, slice_ind))(num_vehicle_slice))
+                tmp_phase = Lambda(slice_tensor, arguments={"index": i}, name="phase_%d_%d" % (i, slice_ind))(
+                    phase_slice)
+                dic_lane[m] = concatenate([tmp_vec, tmp_phase], name="lane_%d_%d" % (i, slice_ind))
 
+            list_phase_pressure = []
 
+            for phase in self.dic_traffic_env_conf["PHASE"][self.dic_traffic_env_conf['SIMULATOR_TYPE']]:
+                m1, m2 = phase.split("_")
+                list_phase_pressure.append(
+                    add([lane_embedding(dic_lane[m1]), lane_embedding(dic_lane[m2])],
+                        name=phase + '_' + str(slice_ind)))
+
+            constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
+                              name="constant_%d" % slice_ind)(num_vehicle_slice)
+            relation_embedding = relation_embed(constant)
+
+            # rotate the phase pressure
+
+            list_phase_pressure_recomb = []
+            num_phase = self.num_actions
+
+            for i in range(num_phase):
+                for j in range(num_phase):
+                    if i != j:
+                        list_phase_pressure_recomb.append(
+                            concatenate([list_phase_pressure[i], list_phase_pressure[j]],
+                                        name="concat_compete_phase_%d_%d_%d" % (i, j, slice_ind)))
+
+            list_phase_pressure_recomb = concatenate(list_phase_pressure_recomb, name="concat_all_%d" % slice_ind)
+            feature_map = Reshape((8, 7, 32))(list_phase_pressure_recomb)
+            lane_conv = _lane_conv(feature_map)
+            if self.dic_agent_conf["MERGE"] == "multiply":
+                relation_conv = _relation_conv(relation_embedding)
+                combine_feature = multiply([lane_conv, relation_conv], name="combine_feature_%d" % slice_ind)
+            else:
+                print("dic_agent_conf[MERGE] has to be multiply")
+
+            hidden_layer = _combine_conv(combine_feature)
+            before_merge = _before_merge(hidden_layer)
+            q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values_%d" % slice_ind)(Reshape((8, 7))(before_merge))
+            if slice_ind == 0:
+                feature = q_values
+            else:
+                feature = concatenate([feature, q_values])
+        feature = Reshape((self.num_agents, self.num_actions))(feature)
+        feature = self.MLP(feature, MLP_layers)
+        return feature
 
     def MultiHeadsAttModel(self,In_agent,In_neighbor,l=5, d=128, dv=16, dout=128, nv = 8,suffix=-1):
         """
@@ -201,11 +285,11 @@ class CoLightAgent(Agent):
         """
         neighbor repr
         """
-        #[batch,agent,dim]->(reshape)[batch,1,agent,dim]->(tile)[batch,agent,agent,dim]
+        # [batch,agent,dim]->(reshape)[batch,1,agent,dim]->(tile)[batch,agent,agent,dim]
         neighbor_repr=RepeatVector3D(self.num_agents)(In_agent)
         print("neighbor_repr.shape", neighbor_repr.shape)
-        #[batch,agent,neighbor,agent]x[batch,agent,agent,dim]->[batch,agent,neighbor,dim]
-        neighbor_repr=Lambda(lambda x:K.batch_dot(x[0],x[1]))([In_neighbor,neighbor_repr])
+        # [batch,agent,neighbor,agent]x[batch,agent,agent,dim]->[batch,agent,neighbor,dim]
+        neighbor_repr=Lambda(lambda x: K.batch_dot(x[0],x[1]))([In_neighbor,neighbor_repr])
         print("neighbor_repr.shape", neighbor_repr.shape)
         """
         attention computation
@@ -241,10 +325,6 @@ class CoLightAgent(Agent):
         out = Dense(dout, activation = "relu",kernel_initializer='random_normal',name='MLP_after_relation_%d'%suffix)(out)
         return out,att_record
 
-
-
-
-
     def adjacency_index2matrix(self,adjacency_index):
         #adjacency_index(the nearest K neighbors):[1,2,3]
         """
@@ -275,12 +355,13 @@ class CoLightAgent(Agent):
                             continue
                         if feature_name == "cur_phase":
                             if len(state[i][j][feature_name])==1:
-                                #choose_action
-                                observation.extend(self.dic_traffic_env_conf['PHASE'][self.dic_traffic_env_conf['SIMULATOR_TYPE']]
-                                                            [state[i][j][feature_name][0]])
+                                # choose_action
+                                observation.extend(self.dic_traffic_env_conf['phase_expansion'][state[i][j][feature_name][0]])
                             else:
                                 observation.extend(state[i][j][feature_name])
-                        elif feature_name=="lane_num_vehicle":
+                        elif feature_name == "lane_num_vehicle":
+                            observation.extend(state[i][j][feature_name])
+                        elif feature_name == "pressure_of_movement":
                             observation.extend(state[i][j][feature_name])
                     feature.append(observation)
                     adj.append(state[i][j]['adjacency_matrix'])
@@ -291,9 +372,9 @@ class CoLightAgent(Agent):
             total_adjs=self.adjacency_index2matrix(np.array(total_adjs))
             #adj:[agent,neighbors]   
         if bar:
-            all_output= self.q_network_bar.predict([total_features,total_adjs])
+            all_output = self.q_network_bar.predict([total_features,total_adjs])
         else:
-            all_output= self.q_network.predict([total_features,total_adjs])
+            all_output = self.q_network.predict([total_features,total_adjs])
         action,attention =all_output[0],all_output[1]
 
         #out: [batch,agent,action], att:[batch,layers,agent,head,neighbors]
@@ -313,7 +394,6 @@ class CoLightAgent(Agent):
         act=np.reshape(act,(batch_size,self.num_agents))
         return act,attention
 
-
     def choose_action(self, count, state):
 
         ''' 
@@ -323,7 +403,6 @@ class CoLightAgent(Agent):
         '''
         act,attention=self.action_att_predict([state])
         return act[0],attention[0] 
-
 
     def prepare_Xs_Y(self, memory, dic_exp_conf):
         """
@@ -387,9 +466,9 @@ class CoLightAgent(Agent):
         return 
 
     #TODO: MLP_layers should be defined in the conf file
-    #TODO: CNN_layers should be defined in the conf file
-    #TODO: CNN_heads should be defined in the conf file
-    #TODO: Output_layers should be degined in the conf file
+    # TODO: CNN_layers should be defined in the conf file
+    # TODO: CNN_heads should be defined in the conf file
+    # TODO: Output_layers should be degined in the conf file
     def build_network(
         self,
         MLP_layers=[32,32], 
@@ -413,7 +492,7 @@ class CoLightAgent(Agent):
         #In: [batch,agent,neighbors,agents]
         In.append(Input(shape=[self.num_agents,self.len_feature],name="feature"))
         In.append(Input(shape=(self.num_agents,self.num_neighbors,self.num_agents),name="adjacency_matrix"))
-
+        # In[0] has to be form of {'cur_phase': Input(8), 'lane_num_vehicle': Input(8)}
 
         Input_end_time=time.time()
         """
@@ -421,10 +500,13 @@ class CoLightAgent(Agent):
         -input: [batch,agent,feature_dim]
         -outpout: [#agent,batch,128]
         """
-        feature=self.MLP(In[0],MLP_layers)
+        # feature = self.MLP(In[0], MLP_layers)
+
+        # =================== iCAP part ======================
+        feature = self.iCAP(In, MLP_layers)
+        # =================== end of iCAP part ======================
 
         Embedding_end_time=time.time()
-
 
         #TODO: remove the dense setting
         #feature:[batch,agents,feature_dim]
@@ -465,15 +547,14 @@ class CoLightAgent(Agent):
             (len(CNN_layers),self.num_agents,CNN_heads[-1],self.num_neighbors)
             )(att_record_all_layers)
 
-        
-        #TODO remove dense net
+        # TODO: remove dense net
         for layer_index,layer_size in enumerate(Output_layers):
                 h=Dense(layer_size,activation='relu',kernel_initializer='random_normal',name='Dense_q_%d'%layer_index)(h)
-        #action prediction layer
-        #[batch,agent,32]->[batch,agent,action]
+        # action prediction layer
+        # [batch,agent,32]->[batch,agent,action]
         out = Dense(self.num_actions,kernel_initializer='random_normal',name='action_layer')(h)
-        #out:[batch,agent,action], att:[batch,layers,agent,head,neighbors]
-        model=Model(inputs=In,outputs=[out,att_record_all_layers])
+        # out:[batch,agent,action], att:[batch,layers,agent,head,neighbors]
+        model = Model(inputs=In,outputs=[out, att_record_all_layers])
 
         if self.att_regulatization:
             model.compile(
@@ -538,28 +619,44 @@ class CoLightAgent(Agent):
         return network
 
     def load_network(self, file_name, file_path=None):
-        if file_path == None:
-            file_path = self.dic_path["PATH_TO_MODEL"]
-
-        self.q_network = load_model(
-            os.path.join(file_path, "%s.h5" % file_name),
-            custom_objects={'RepeatVector3D':RepeatVector3D})
-        print("succeed in loading model %s"%file_name)
+        json_file = open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.json".format(file_name)), 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.q_network = model_from_json(loaded_model_json, custom_objects={'RepeatVector3D':RepeatVector3D})
+        self.q_network.load_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.h5".format(file_name)))
+        self.q_network.compile(
+            optimizer=RMSprop(lr=self.dic_agent_conf["LEARNING_RATE"]),
+            loss=self.dic_agent_conf["LOSS_FUNCTION"],
+            loss_weights=[1, 0])
+        print("succeed in loading model %s" % file_name)
 
     def load_network_bar(self, file_name, file_path=None):
-        if file_path == None:
-            file_path = self.dic_path["PATH_TO_MODEL"]
-        self.q_network_bar = load_model(
-            os.path.join(file_path, "%s.h5" % file_name),
-            custom_objects={'RepeatVector3D':RepeatVector3D})
-        print("succeed in loading model %s"%file_name) 
+        json_file = open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.json".format(file_name)), 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.q_network_bar = model_from_json(loaded_model_json, custom_objects={'RepeatVector3D':RepeatVector3D})
+        self.q_network_bar.load_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.h5".format(file_name)))
+        self.q_network_bar.compile(
+            optimizer=RMSprop(lr=self.dic_agent_conf["LEARNING_RATE"]),
+            loss=self.dic_agent_conf["LOSS_FUNCTION"],
+            loss_weights=[1, 0])
+
+        print("succeed in loading model bar %s" % file_name)
 
     def save_network(self, file_name):
-        self.q_network.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
+        self.q_network.save_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.h5".format(file_name)))
+        model_json = self.q_network.to_json()
+        with open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.json".format(file_name)), "w") as json_file:
+            json_file.write(model_json)
+
+        # self.q_network.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
 
     def save_network_bar(self, file_name):
-        self.q_network_bar.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
-
+        self.q_network_bar.save_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}_bar.h5".format(file_name)))
+        model_json = self.q_network_bar.to_json()
+        with open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}_bar.json".format(file_name)), "w") as json_file:
+            json_file.write(model_json)
+        # self.q_network_bar.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
 
 
 if __name__=='__main__':

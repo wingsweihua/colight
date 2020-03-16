@@ -176,8 +176,6 @@ class Pipeline:
             else:
                 return 0
 
-
-
     def generator_wrapper(self, cnt_round, cnt_gen, dic_path, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                           best_round=None):
         generator = Generator(cnt_round=cnt_round,
@@ -215,7 +213,6 @@ class Pipeline:
         model_pool.model_compare(cnt_round)
         model_pool.dump_model_pool()
 
-
         return
         #self.best_round = model_pool.get()
         #print("self.best_round", self.best_round)
@@ -245,7 +242,6 @@ class Pipeline:
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
                 print("----------------------------")
 
-
     def downsample_for_system(self, path_to_log, dic_traffic_env_conf):
         for i in range(dic_traffic_env_conf['NUM_INTERSECTIONS']):
             self.downsample(path_to_log, i)
@@ -272,7 +268,6 @@ class Pipeline:
         for inter_id in range(start, stop):
             print("make construct_sample_wrapper for ", inter_id)
             cs.make_reward(inter_id)
-        
 
     def run(self, multi_process=False):
 
@@ -424,7 +419,6 @@ class Pipeline:
             cs = ConstructSample(path_to_samples=train_round, cnt_round=cnt_round,
                                  dic_traffic_env_conf=self.dic_traffic_env_conf)
             cs.make_reward_for_system()
-
 
             # EvaluateSample()
             making_samples_end_time = time.time()

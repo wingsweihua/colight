@@ -5,6 +5,7 @@ import os
 import traceback
 import pandas as pd
 
+
 class ConstructSample:
 
     def __init__(self, path_to_samples, cnt_round, dic_traffic_env_conf):
@@ -72,8 +73,6 @@ class ConstructSample:
             print('traceback.format_exc():\n%s' % traceback.format_exc())
             return 0
 
-
-
     def construct_state(self,features,time,i):
         '''
 
@@ -90,14 +89,13 @@ class ConstructSample:
             for key, value in state["state"].items():
                 if key in features:
                     if "cur_phase" in key:
-                        state_after_selection[key] = self.dic_traffic_env_conf['PHASE'][self.dic_traffic_env_conf['SIMULATOR_TYPE']][value[0]]
+                        state_after_selection[key] = self.dic_traffic_env_conf['phase_expansion'][value[0]]
                     else:
                         state_after_selection[key] = value
         else:
             state_after_selection = {key: value for key, value in state["state"].items() if key in features}
         # print(state_after_selection)
         return state_after_selection
-
 
     def _construct_state_process(self, features, time, state, i):
         assert time == state["time"]
@@ -126,8 +124,6 @@ class ConstructSample:
         reward['pressure'] = np.sum(rs["pressure"])
         return reward
 
-
-
     def cal_reward(self, rs, rewards_components):
         r = 0
         for component, weight in rewards_components.items():
@@ -139,7 +135,6 @@ class ConstructSample:
                 continue
             r += rs[component] * weight
         return r
-
 
     def construct_reward(self,rewards_components,time, i):
 
@@ -166,7 +161,6 @@ class ConstructSample:
             raise ValueError
         else:
             return self.logging_data_list_per_gen[i][time]['action']
-
 
     def make_reward(self, folder, i):
         '''
@@ -212,7 +206,6 @@ class ConstructSample:
             print("Error occurs when making rewards in generator {0} for intersection {1}".format(folder, i))
             print('traceback.format_exc():\n%s' % traceback.format_exc())
             return 0
-
 
     def make_reward_for_system(self):
         '''
