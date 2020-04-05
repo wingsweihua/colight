@@ -50,8 +50,8 @@ class RepeatVector3D(Layer):
         return (input_shape[0], self.times, input_shape[1],input_shape[2])
 
     def call(self, inputs):
-        #[batch,agent,dim]->[batch,1,agent,dim]
-        #[batch,1,agent,dim]->[batch,agent,agent,dim]
+        # [batch,agent,dim]->[batch,1,agent,dim]
+        # [batch,1,agent,dim]->[batch,agent,agent,dim]
 
         return K.tile(K.expand_dims(inputs,1),[1,self.times,1,1])
 
