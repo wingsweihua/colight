@@ -48,7 +48,7 @@ def parse_args():
     # TAKE CARE
     ADJACENCY_BY_CONNECTION_OR_GEO=False
 
-    #modify:TOP_K_ADJACENCY in line 154
+    # modify:TOP_K_ADJACENCY in line 154
     global PRETRAIN
     PRETRAIN=False
     parser.add_argument("--mod", type=str, default='CoLight')  # SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
@@ -63,7 +63,7 @@ def parse_args():
     global ANON_PHASE_REPRE
     tt=parser.parse_args()
     if 'CoLight_Signal' in tt.mod:
-        #12dim
+        # 12dim
         ANON_PHASE_REPRE={
             # 0: [0, 0, 0, 0, 0, 0, 0, 0],
             1: [0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1],# 'WSES',
@@ -72,7 +72,7 @@ def parse_args():
             4: [0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1]# 'NLSL',
         }
     else:
-        #12dim
+        # 12dim
         ANON_PHASE_REPRE={
             1: [0, 1, 0, 1, 0, 0, 0, 0],
             2: [0, 0, 0, 0, 0, 1, 0, 1],
