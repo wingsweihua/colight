@@ -5,24 +5,23 @@ import numpy as np
 import json
 import copy
 from math import isnan
-import matplotlib as mlp
 import shutil
 import argparse
-
+import matplotlib.pyplot as plt
 import matplotlib as mlp
 mlp.use("agg")
-import matplotlib.pyplot as plt
 
-#font = {'size': 24}
-#mlp.rc('font', **font)
+
+# font = {'size': 24}
+# mlp.rc('font', **font)
 
 NAN_LABEL = -1
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--memo", type=str, default='initial')
-    parser.add_argument("-b", action="store_true",default=False, help="run baseline analysis")
+    parser.add_argument("--memo", type=str, default='0404')
+    parser.add_argument("-b", action="store_true", default=False, help="run baseline analysis")
     return parser.parse_args()
 
 
@@ -38,15 +37,15 @@ def get_traffic_volume(file_name, run_cnt):
         return int(int(file_name[sta:end]) * scale * 4)  # lane_num = 4
 
 
-def get_metrics(duration_list, queue_length_list, min_duration, min_duration_id, min_queue_length, min_queue_length_id,
+def get_metrics(duration_list, pressure_list, min_duration, min_duration_id, min_pressure, min_pressure_id,
                 traffic_name, total_summary, mode_name, save_path, num_rounds, min_duration2=None):
     validation_duration_length = 10
     minimum_round = 50 if num_rounds > 50 else 0
     duration_list = np.array(duration_list)
-    queue_length_list = np.array(queue_length_list)
+    pressure_list = np.array(pressure_list)
 
     # min_duration, min_duration_id = np.min(duration_list), np.argmin(duration_list)
-    # min_queue_length, min_queue_length_id = np.min(queue_length_list), np.argmin(queue_length_list)
+    # min_pressure, min_pressure_id = np.min(pressure_list), np.argmin(pressure_list)
 
     nan_count = len(np.where(duration_list == NAN_LABEL)[0])
     validation_duration = duration_list[-validation_duration_length:]
@@ -81,7 +80,6 @@ def get_metrics(duration_list, queue_length_list, min_duration, min_duration_id,
     vol = traffic_name.split('_')[3]
     ratio = traffic_name.split('_')[4]
 
-
     total_summary['inter_num'].append(inter_num)
     total_summary['traffic_volume'].append(vol)
     total_summary['ratio'].append(ratio)
@@ -91,8 +89,8 @@ def get_metrics(duration_list, queue_length_list, min_duration, min_duration_id,
     elif ".json" in traffic_name:
         total_summary["traffic"].append(traffic_name.split(".json"))
 
-    total_summary["min_queue_length"].append(min_queue_length)
-    total_summary["min_queue_length_round"].append(min_queue_length_id)
+    total_summary["min_pressure"].append(min_pressure)
+    total_summary["min_pressure_round"].append(min_pressure_id)
     total_summary["min_duration"].append(min_duration)
     total_summary["min_duration_round"].append(min_duration_id)
     total_summary["final_duration"].append(final_duration)
@@ -210,18 +208,17 @@ def summary_detail_test(memo, total_summary):
         if ".xml" not in traffic_file and ".json" not in traffic_file:
             continue
 
-        #if "cross.2phases_rou01_equal_700.xml_12_11_08_16_00" != traffic_file:
+        # if "cross.2phases_rou01_equal_700.xml_12_11_08_16_00" != traffic_file:
         #    continue
         print(traffic_file)
 
-        min_queue_length = min_duration = min_duration2 = float('inf')
-        min_queue_length_id = min_duration_ind = 0
+        min_pressure = min_duration = min_duration2 = float('inf')
+        min_pressure_id = min_duration_ind = 0
 
-        # get run_counts to calculate the queue_length each second
+        # get run_counts to calculate the pressure each second
         exp_conf = open(os.path.join(records_dir, traffic_file, "exp.conf"), 'r')
         dic_exp_conf = json.load(exp_conf)
         print(dic_exp_conf)
-
 
         traffic_env_conf = open(os.path.join(records_dir, traffic_file, "traffic_env.conf"), 'r')
         dic_traffic_env_conf = json.load(traffic_env_conf)
@@ -231,13 +228,12 @@ def summary_detail_test(memo, total_summary):
         num_seg = run_counts//time_interval
         num_intersection = dic_traffic_env_conf['NUM_INTERSECTIONS']
 
-
         traffic_vol = get_traffic_volume(dic_exp_conf["TRAFFIC_FILE"][0], run_counts)
         nan_thres = 120
 
         duration_each_round_list = []
         duration_each_round_list2 = []
-        queue_length_each_round_list = []
+        pressure_each_round_list = []
         num_of_vehicle_in = []
         num_of_vehicle_out = []
 
@@ -255,11 +251,11 @@ def summary_detail_test(memo, total_summary):
             print("===={0}".format(round))
 
             df_vehicle_all = []
-            queue_length_each_round = []
+            pressure_each_round = []
 
             list_duration_seg = [float('inf')] * num_seg
-            list_queue_length_seg = [float('inf')] * num_seg
-            list_queue_length_id_seg = [0] * num_seg
+            list_pressure_seg = [float('inf')] * num_seg
+            list_pressure_id_seg = [0] * num_seg
             list_duration_id_seg = [0] * num_seg
             for inter_index in range(num_intersection):
 
@@ -267,13 +263,13 @@ def summary_detail_test(memo, total_summary):
 
                     round_dir = os.path.join(train_round_dir, round)
 
-                    # summary items (queue_length) from pickle
+                    # summary items (pressure) from pickle
                     f = open(os.path.join(round_dir, "inter_{0}.pkl".format(inter_index)), "rb")
                     samples = pkl.load(f)
-                    queue_length_each_inter_each_round = 0
+                    pressure_each_inter_each_round = 0
                     for sample in samples:
-                        queue_length_each_inter_each_round += sum(sample['state']['lane_num_vehicle_been_stopped_thres1'])
-                    queue_length_each_inter_each_round = queue_length_each_inter_each_round//len(samples)
+                        pressure_each_inter_each_round += sum(sample['state']['pressure_of_movement'])
+                    pressure_each_inter_each_round = pressure_each_inter_each_round//len(samples)
                     f.close()
 
                     # summary items (duration) from csv
@@ -281,11 +277,11 @@ def summary_detail_test(memo, total_summary):
                                                      sep=',', header=0, dtype={0: str, 1: float, 2: float},
                                                      names=["vehicle_id", "enter_time", "leave_time"])
                     df_vehicle_inter['leave_time_origin'] = df_vehicle_inter['leave_time']
-                    df_vehicle_inter['leave_time'].fillna(run_counts,inplace=True)
+                    df_vehicle_inter['leave_time'].fillna(run_counts, inplace=True)
                     df_vehicle_inter['duration'] = df_vehicle_inter["leave_time"].values - df_vehicle_inter["enter_time"].values
                     ave_duration = df_vehicle_inter['duration'].mean(skipna=True)
-                    print("------------- inter_index: {0}\tave_duration: {1}\tave_queue_length:{2}"
-                          .format(inter_index, ave_duration, queue_length_each_inter_each_round))
+                    print("------------- inter_index: {0}\tave_duration: {1}\tave_pressure:{2}"
+                          .format(inter_index, ave_duration, pressure_each_inter_each_round))
 
                     # if "peak" in traffic_file:
                     #     did1 = df_vehicle_inter_0["enter_time"].values <= run_counts / 2
@@ -312,43 +308,43 @@ def summary_detail_test(memo, total_summary):
                     #             min_duration2 = ave_duration2
                     #             min_duration_ind2 = int(round[6:])
                     df_vehicle_all.append(df_vehicle_inter)
-                    queue_length_each_round.append(queue_length_each_inter_each_round)
+                    pressure_each_round.append(pressure_each_inter_each_round)
 
                 except:
-                    queue_length_each_round.append(NAN_LABEL)
+                    pressure_each_round.append(NAN_LABEL)
                     # num_of_vehicle_in.append(NAN_LABEL)
                     # num_of_vehicle_out.append(NAN_LABEL)
 
-            if len(df_vehicle_all)==0:
+            if len(df_vehicle_all) == 0:
                 print("====================================EMPTY")
                 continue
 
             df_vehicle_all = pd.concat(df_vehicle_all)
             vehicle_duration = df_vehicle_all.groupby(by=['vehicle_id'])['duration'].sum()
             ave_duration = vehicle_duration.mean()
-            ave_queue_length = np.mean(queue_length_each_round)
+            ave_pressure = np.mean(pressure_each_round)
 
             duration_each_round_list.append(ave_duration)
-            queue_length_each_round_list.append(ave_queue_length)
-
+            pressure_each_round_list.append(ave_pressure)
 
             num_of_vehicle_in.append(len(df_vehicle_all['vehicle_id'].unique()))
             num_of_vehicle_out.append(len(df_vehicle_all.dropna()['vehicle_id'].unique()))
 
-            print("==== round: {0}\tave_duration: {1}\tave_queue_length_per_intersection:{2}\t"
+            print("==== round: {0}\tave_duration: {1}\tave_pressure_per_intersection:{2}\t"
                   "num_of_vehicle_in:{3}\tnum_of_vehicle_out:{4}"
-                  .format(round, ave_duration,ave_queue_length,num_of_vehicle_in[-1],num_of_vehicle_out[-1]))
+                  .format(round, ave_duration,ave_pressure,num_of_vehicle_in[-1],num_of_vehicle_out[-1]))
+            # until here, the average pressure, duration, # vehicle in/out are obtained for a round
 
             duration_flow = vehicle_duration.reset_index()
 
-            duration_flow['direction'] = duration_flow['vehicle_id'].apply(lambda x:x.split('_')[1])
+            duration_flow['direction'] = duration_flow['vehicle_id'].apply(lambda x: x.split('_')[1])
             duration_flow_ave = duration_flow.groupby(by=['direction'])['duration'].mean()
             print(duration_flow_ave)
 
             # print(real_traffic_vol, traffic_vol, traffic_vol - real_traffic_vol, nan_num)
-            if min_queue_length > ave_queue_length:
-                min_queue_length = np.mean(queue_length_each_round)
-                min_queue_length_id = int(round[6:])
+            if min_pressure > ave_pressure:
+                min_pressure = np.mean(pressure_each_round)
+                min_pressure_id = int(round[6:])
             #
             # valid_flag = json.load(open(os.path.join(round_dir, "valid_flag.json")))
             # if valid_flag['0']:  # temporary for one intersection
@@ -356,18 +352,17 @@ def summary_detail_test(memo, total_summary):
             #         min_duration = ave_duration
             #         min_duration_ind = int(round[6:])
 
-
-            #### This is for long time
+            # This is for long time
 
             if num_seg > 1:
                 for i, interval in enumerate(range(0, run_counts, time_interval)):
-                    did = df_vehicle_all[(df_vehicle_all["enter_time"]< interval+time_interval) &
+                    did = df_vehicle_all[(df_vehicle_all["enter_time"] < interval+time_interval) &
                                          (df_vehicle_all["enter_time"].values > interval)]
-                    #vehicle_in_seg = sum([int(x) for x in (df_vehicle_inter_0["enter_time"][did].values > 0)])
-                    #vehicle_out_seg = sum([int(x) for x in (df_vehicle_inter_0["leave_time"][did].values > 0)])
+                    # vehicle_in_seg = sum([int(x) for x in (df_vehicle_inter_0["enter_time"][did].values > 0)])
+                    # vehicle_out_seg = sum([int(x) for x in (df_vehicle_inter_0["leave_time"][did].values > 0)])
 
                     vehicle_duration_seg = did.groupby(by=['vehicle_id'])['duration'].sum()
-                    ave_duration_seg = vehicle_duration_seg[vehicle_duration_seg>10].mean()
+                    ave_duration_seg = vehicle_duration_seg[vehicle_duration_seg > 10].mean()
                     # print(traffic_file, round, i, ave_duration)
                     # real_traffic_vol_seg = 0
                     # nan_num_seg = 0
@@ -384,7 +379,7 @@ def summary_detail_test(memo, total_summary):
                         list_duration_seg[i] = ave_duration_seg
                         list_duration_id_seg[i] = int(round[6:])
 
-                    #round_summary = {}
+                    # round_summary = {}
                 for j in range(num_seg):
                     key = "min_duration-" + str(j)
 
@@ -392,10 +387,9 @@ def summary_detail_test(memo, total_summary):
                         round_summary[key] = [list_duration_seg[j]]
                     else:
                         round_summary[key].append(list_duration_seg[j])
-                #round_result_dir = os.path.join("summary", memo, traffic_file)
-                #if not os.path.exists(round_result_dir):
-                #    os.makedirs(round_result_dir)
-
+                # round_result_dir = os.path.join("summary", memo, traffic_file)
+                # if not os.path.exists(round_result_dir):
+                #     os.makedirs(round_result_dir)
 
         # result_dir = os.path.join(records_dir, traffic_file)
         result_dir = os.path.join("summary", memo, traffic_file)
@@ -403,7 +397,7 @@ def summary_detail_test(memo, total_summary):
             os.makedirs(result_dir)
         _res = {
             "duration": duration_each_round_list,
-            "queue_length": queue_length_each_round_list,
+            "pressure": pressure_each_round_list,
             "vehicle_in": num_of_vehicle_in,
             "vehicle_out": num_of_vehicle_out
         }
@@ -426,12 +420,11 @@ def summary_detail_test(memo, total_summary):
             else:
                 performance_at_min_duration_round[traffic_name].append((duration_each_segment_list, traffic_time))
 
-
         # print(os.path.join(result_dir, "test_results.csv"))
 
         # total_summary
-        total_summary = get_metrics(duration_each_round_list, queue_length_each_round_list,
-                                    min_duration, min_duration_ind, min_queue_length, min_queue_length_id,
+        total_summary = get_metrics(duration_each_round_list, pressure_each_round_list,
+                                    min_duration, min_duration_ind, min_pressure, min_pressure_id,
                                     traffic_file, total_summary,
                                     mode_name="test", save_path=result_dir, num_rounds=num_rounds,
                                     min_duration2=None if "peak" not in traffic_file else min_duration2)
@@ -441,10 +434,8 @@ def summary_detail_test(memo, total_summary):
         else:
             performance_duration[traffic_name].append((duration_each_round_list, traffic_time))
 
-
         total_result = pd.DataFrame(total_summary)
         total_result.to_csv(os.path.join("summary", memo, "total_test_results.csv"))
-
 
     figure_dir = os.path.join("summary", memo, "figures")
     if not os.path.exists(figure_dir):
@@ -455,7 +446,7 @@ def summary_detail_test(memo, total_summary):
     performance_at_min_duration_round_plot(performance_at_min_duration_round, figure_dir, mode_name="test")
 
 
-##TODO multi-intersection
+# TODO multi-intersection
 def summary_detail_baseline(memo):
 
     DETAIL_ARTERIAL = True
@@ -464,7 +455,6 @@ def summary_detail_baseline(memo):
     records_dir = os.path.join("records", memo)
     for traffic_file in os.listdir(records_dir):
         ANON_ENV = False
-
 
         if ".xml" not in traffic_file and "anon" not in traffic_file:
             continue
@@ -520,7 +510,6 @@ def summary_detail_baseline(memo):
                 df_vehicle_inter_0.fillna(run_counts,inplace=True)
                 df_vehicle_inter_0['duration'] = df_vehicle_inter_0["leave_time"] - df_vehicle_inter_0["enter_time"]
 
-
                 df_vehicle.append(df_vehicle_inter_0)
                 print(df_vehicle_inter_0.groupby(['flow_id'])['duration'].mean()) # mean for every intersection
 
@@ -539,7 +528,6 @@ def summary_detail_baseline(memo):
                 side_street_duration = np.average(detail_arterial[3:])
                 avg_pressure = avg_pressure/NUM_OF_INTERSECTIONS
 
-
             car_num_out_df = df_vehicle.groupby(by=['flow_id', 'car_id'])['leave_time'].apply(lambda x: x.shape[0] != x.count())
             car_num_out = car_num_out_df[car_num_out_df].count()
 
@@ -554,13 +542,12 @@ def summary_detail_baseline(memo):
     total_summary.to_csv(os.path.join("records", memo, "total_baseline_results.txt").replace("records", "summary"),sep='\t',index=False)
 
 
-
 # def main(memo=None):
 #     total_summary = {
 #         "traffic": [],
 #         "traffic_file": [],
-#         "min_queue_length": [],
-#         "min_queue_length_round": [],
+#         "min_pressure": [],
+#         "min_pressure_round": [],
 #         "min_duration": [],
 #         "min_duration_round": [],
 #         "final_duration": [],
@@ -575,6 +562,7 @@ def summary_detail_baseline(memo):
 #     #summary_detail_train(memo, copy.deepcopy(total_summary))
 #     summary_detail_test(memo, copy.deepcopy(total_summary))
 #     # summary_detail_test_segments(memo, copy.deepcopy(total_summary))
+
 
 def print_samples(memo):
     records_dir = os.path.join("records", memo)
@@ -649,7 +637,7 @@ def print_samples():
         count +=1
         for sample in round:
             print(sample)
-    #for sample in samples:
+    # for sample in samples:
     #    print(sample)
     f.close()
 
@@ -660,8 +648,8 @@ if __name__ == "__main__":
         "inter_num":[],
         "traffic_volume":[],
         "ratio":[],
-        "min_queue_length": [],
-        "min_queue_length_round": [],
+        "min_pressure": [],
+        "min_pressure_round": [],
         "min_duration": [],
         "min_duration_round": [],
         "final_duration": [],
@@ -671,9 +659,6 @@ if __name__ == "__main__":
         "nan_count": [],
         "min_duration2": []
     }
-
-
-
 
     memo = "multi_phase/multi_phase_12_12_600_700_layer_10"
 

@@ -10,7 +10,7 @@ multi_process = True
 TOP_K_ADJACENCY=-1
 TOP_K_ADJACENCY_LANE=-1
 PRETRAIN=False
-NUM_ROUNDS=100
+NUM_ROUNDS=5
 EARLY_STOP=False 
 NEIGHBOR=False
 SAVEREPLAY=False
@@ -36,7 +36,7 @@ def parse_args():
     global TOP_K_ADJACENCY_LANE
     TOP_K_ADJACENCY_LANE=5
     global NUM_ROUNDS
-    NUM_ROUNDS=100
+    NUM_ROUNDS=5
     global EARLY_STOP
     EARLY_STOP=False
     global NEIGHBOR
