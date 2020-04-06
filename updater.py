@@ -203,66 +203,25 @@ class Updater:
                     sample_set = self.load_sample(i)
                     self.agents[i].prepare_Xs_Y(sample_set, self.dic_exp_conf)
         else:
-            samples_gcn_df = None
-            if False: # Todo decide multi-process
-                for i in range(self.dic_traffic_env_conf['NUM_INTERSECTIONS']):
-                    sample_set = self.load_sample(i)
-                    if len(sample_set) == 0:
-                        continue
-                    samples_set_df = pd.DataFrame.from_records(sample_set,columns= ['state','action','next_state','inst_reward','reward','time','generator'])
-                    samples_set_df['input'] = samples_set_df[['state','action','next_state','inst_reward','reward']].values.tolist()
-                    samples_set_df.drop(['state','action','next_state','inst_reward','reward'], axis=1, inplace=True)
-                    # samples_set_df['inter_id'] = i
-                    if samples_gcn_df is None:
-                        samples_gcn_df = samples_set_df
-                    else:
-                        # print(samples_set_df[['time','generator']])
-                        samples_gcn_df = pd.merge(samples_gcn_df, samples_set_df, how='inner',
-                                                  on=["generator",'time'], suffixes=('','_{0}'.format(i)))
-                intersection_input_columns = ['input'] + ['input_{0}'.format(i+1) for i in range(self.dic_traffic_env_conf['NUM_INTERSECTIONS']-1)]
-                for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
-                    sample_set_list = samples_gcn_df[intersection_input_columns].values.tolist()
-                    self.agents[i].prepare_Xs_Y(sample_set_list, self.dic_exp_conf)
-            elif False :# True:
-                samples_gcn_df = []
-                print("start get samples")
-                get_samples_start_time = time.time()
-                for i in range(self.dic_traffic_env_conf['NUM_INTERSECTIONS']):
-                    sample_set = self.load_sample(i)
-                    samples_set_df = pd.DataFrame.from_records(sample_set,columns= ['state','action','next_state','inst_reward','reward','time','generator'])
-                    samples_set_df['input'] = samples_set_df[['state','action','next_state','inst_reward','reward']].values.tolist()
-                    samples_set_df.drop(['state','action','next_state','inst_reward','reward','time','generator'], axis=1, inplace=True)
-                    # samples_set_df['inter_id'] = i
-                    samples_gcn_df.append(samples_set_df['input'])
-                    if i%100 == 0:
-                        print("inter {0} samples_set_df.shape: ".format(i), samples_set_df.shape)
-                samples_gcn_df = pd.concat(samples_gcn_df, axis=1)
-                print("samples_gcn_df.shape :", samples_gcn_df.shape)
-                print("Getting samples time: ", time.time()-get_samples_start_time)
+            samples_gcn_df = []
+            print("start get samples")
+            get_samples_start_time = time.time()
+            for i in range(self.dic_traffic_env_conf['NUM_INTERSECTIONS']):
+                sample_set = self.load_sample(i)
+                samples_set_df = pd.DataFrame.from_records(sample_set,columns= ['state','action','next_state','inst_reward','reward','time','generator'])
+                samples_set_df['input'] = samples_set_df[['state','action','next_state','inst_reward','reward']].values.tolist()
+                samples_set_df.drop(['state','action','next_state','inst_reward','reward','time','generator'], axis=1, inplace=True)
+                # samples_set_df['inter_id'] = i
+                samples_gcn_df.append(samples_set_df['input'])
+                if i%100 == 0:
+                    print("inter {0} samples_set_df.shape: ".format(i), samples_set_df.shape)
+            samples_gcn_df = pd.concat(samples_gcn_df, axis=1)
+            print("samples_gcn_df.shape :", samples_gcn_df.shape)
+            print("Getting samples time: ", time.time()-get_samples_start_time)
 
-                for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
+            for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
                     sample_set_list = samples_gcn_df.values.tolist()
                     self.agents[i].prepare_Xs_Y(sample_set_list, self.dic_exp_conf)
-            else:
-                samples_gcn_df = []
-                print("start get samples")
-                get_samples_start_time = time.time()
-                for i in range(self.dic_traffic_env_conf['NUM_INTERSECTIONS']):
-                    sample_set = self.load_sample(i)
-                    samples_set_df = pd.DataFrame.from_records(sample_set,columns= ['state','action','next_state','inst_reward','reward','time','generator'])
-                    samples_set_df['input'] = samples_set_df[['state','action','next_state','inst_reward','reward']].values.tolist()
-                    samples_set_df.drop(['state','action','next_state','inst_reward','reward','time','generator'], axis=1, inplace=True)
-                    # samples_set_df['inter_id'] = i
-                    samples_gcn_df.append(samples_set_df['input'])
-                    if i%100 == 0:
-                        print("inter {0} samples_set_df.shape: ".format(i), samples_set_df.shape)
-                samples_gcn_df = pd.concat(samples_gcn_df, axis=1)
-                print("samples_gcn_df.shape :", samples_gcn_df.shape)
-                print("Getting samples time: ", time.time()-get_samples_start_time)
-
-                for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
-                        sample_set_list = samples_gcn_df.values.tolist()
-                        self.agents[i].prepare_Xs_Y(sample_set_list, self.dic_exp_conf)
 
         print("------------------Load samples time: ", time.time()-start_time)
 
