@@ -20,7 +20,7 @@ NAN_LABEL = -1
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--memo", type=str, default='0405_colight_frap_reward_queue_length')
+    parser.add_argument("--memo", type=str, default='0405_colight_frap_reward_queue_length_state_lane_num_vehicle')
     parser.add_argument("-b", action="store_true", default=False, help="run baseline analysis")
     return parser.parse_args()
 
