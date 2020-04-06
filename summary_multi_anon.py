@@ -21,7 +21,9 @@ NAN_LABEL = -1
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--memo", type=str, default='0405_colight_frap_reward_queue_length_state_lane_num_vehicle')
+    parser.add_argument("--state", type=str, default='lane_num_vehicle')
     parser.add_argument("-b", action="store_true", default=False, help="run baseline analysis")
+
     return parser.parse_args()
 
 
@@ -196,7 +198,7 @@ def performance_at_min_duration_round_plot(performance_at_min_duration_round, fi
         plt.close()
 
 
-def summary_detail_test(memo, total_summary):
+def summary_detail_test(memo, total_summary, state_name):
     # each_round_train_duration
 
     performance_duration = {}
@@ -268,7 +270,7 @@ def summary_detail_test(memo, total_summary):
                     samples = pkl.load(f)
                     pressure_each_inter_each_round = 0
                     for sample in samples:
-                        pressure_each_inter_each_round += sum(sample['state']['pressure_of_movement'])
+                        pressure_each_inter_each_round += sum(sample['state'][state_name])
                     pressure_each_inter_each_round = pressure_each_inter_each_round//len(samples)
                     f.close()
 
@@ -660,15 +662,13 @@ if __name__ == "__main__":
         "min_duration2": []
     }
 
-    memo = "multi_phase/multi_phase_12_12_600_700_layer_10"
-
     args = parse_args()
 
     # print_samples()
     if args.b:
         summary_detail_baseline(args.memo)
     else:
-        summary_detail_test(args.memo, copy.deepcopy(total_summary))
+        summary_detail_test(args.memo, copy.deepcopy(total_summary), args.state)
 
 
 
