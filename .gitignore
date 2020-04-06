@@ -4,3 +4,4 @@ model/
 records/
 summary/
 temp.tensorboard/
+errors/
