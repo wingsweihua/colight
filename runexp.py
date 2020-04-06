@@ -81,7 +81,6 @@ def parse_args():
         }
     print('agent_name:%s',tt.mod)
     print('ANON_PHASE_REPRE:',ANON_PHASE_REPRE)
-    
 
     return parser.parse_args()
 
@@ -182,6 +181,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "AGGREGATE": False,
             "DEBUG": False,
             "EARLY_STOP": EARLY_STOP,
+
         }
 
         dic_agent_conf_extra = {
@@ -195,6 +195,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "ROTATION": True,
             "N_LAYER": 2,
             "TRAFFIC_FILE": traffic_file,
+            "USE_FRAP": True
         }
 
         global TOP_K_ADJACENCY

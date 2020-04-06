@@ -500,10 +500,12 @@ class CoLightAgent(Agent):
         -input: [batch,agent,feature_dim]
         -outpout: [#agent,batch,128]
         """
-        # feature = self.MLP(In[0], MLP_layers)
 
         # =================== iCAP part ======================
-        feature = self.iCAP(In, MLP_layers)
+        if self.dic_agent_conf["USE_FRAP"]:
+            feature = self.iCAP(In, MLP_layers)
+        else:
+            feature = self.MLP(In[0], MLP_layers)
         # =================== end of iCAP part ======================
 
         Embedding_end_time=time.time()
