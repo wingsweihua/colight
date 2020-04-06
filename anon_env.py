@@ -529,7 +529,7 @@ class Intersection:
         dic_feature["vehicle_acceleration_img"] = None
         dic_feature["vehicle_waiting_time_img"] = None  # self._get_lane_vehicle_accumulated_waiting_time(self.list_entering_lanes)
         dic_feature["lane_num_vehicle"] = None,  # self._get_lane_num_vehicle(self.list_entering_lanes)
-        dic_feature["pressure"] = None,  # [self._get_pressure()]
+        dic_feature["pressure"] = [self._get_pressure()]
         dic_feature["pressure_of_movement"] = self.get_pressure_of_movement()
 
         if self.fast_compute:
@@ -540,7 +540,7 @@ class Intersection:
             dic_feature["leaving_vehicle"] = self._get_leaving_vehicles(simulator_state)
 
         dic_feature["lane_num_vehicle_been_stopped_thres01"] = None  # self._get_lane_num_vehicle_been_stopped(0.1, self.list_entering_lanes)
-        dic_feature["lane_num_vehicle_been_stopped_thres1"] = self._get_lane_num_vehicle_been_stopped(1, self.list_entering_lanes)
+        dic_feature["lane_num_vehicle_been_stopped_thres1"] = None,  # self._get_lane_num_vehicle_been_stopped(1, self.list_entering_lanes)
         dic_feature["lane_queue_length"] = None # self._get_lane_queue_length(self.list_entering_lanes)
         dic_feature["lane_num_vehicle_left"] = None
         dic_feature["lane_sum_duration_vehicle_left"] = None
@@ -766,8 +766,8 @@ class Intersection:
         dic_reward["sum_lane_num_vehicle_left"] = None
         dic_reward["sum_duration_vehicle_left"] = None
         dic_reward["sum_num_vehicle_been_stopped_thres01"] = None
-        dic_reward["sum_num_vehicle_been_stopped_thres1"] = np.sum(self.dic_feature["lane_num_vehicle_been_stopped_thres1"])
-        dic_reward['pressure'] = None,  # np.sum(self.dic_feature["pressure"])
+        dic_reward["sum_num_vehicle_been_stopped_thres1"] = None,  # np.sum(self.dic_feature["lane_num_vehicle_been_stopped_thres1"])
+        dic_reward['pressure'] = np.sum(self.dic_feature["pressure"])
 
         reward = 0
         for r in dic_reward_info:
