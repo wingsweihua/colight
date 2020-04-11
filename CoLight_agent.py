@@ -43,10 +43,18 @@ def slice_icap_2(x, index):
 
 def slice_tensor_2(x, index):
     x_shape = K.int_shape(x)
-    if len(x_shape) == 4:
+    if len(x_shape) == 3:
         return x[:, :, index, :]
-    elif len(x_shape) == 3:
+    elif len(x_shape) == 2:
         return x[:, :, index]
+
+
+def slice_tensor_3(x, index):
+    x_shape = K.int_shape(x)
+    if len(x_shape) == 3:
+        return x[:, :, index, :]
+    elif len(x_shape) == 2:
+        return x[:, index, :]
 
 
 class RepeatVector3D(Layer):
@@ -291,8 +299,9 @@ class CoLightAgent(Agent):
 
         dic_lane = {}
         for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
-            tmp_vec = d(Lambda(slice_tensor_2, arguments={"index": i}, name="vec_%d" % i)(num_vehicle_input))  # None, 9, 4
-            tmp_phase = Lambda(slice_tensor_2, arguments={"index": i}, name="phase_%d" % i)(p)  # None, 9, 4
+            tmp_vec = Lambda(slice_tensor_2, arguments={"index": i}, output_shape=[self.num_agents], name="vec_%d" % i)(num_vehicle_input)
+            tmp_vec = d(Reshape((self.num_agents, 1))(tmp_vec))  # None, 9, 4
+            tmp_phase = Lambda(slice_tensor_2, arguments={"index": i}, output_shape=[self.num_agents, 4], name="phase_%d" % i)(p)  # None, 9, 4
             dic_lane[m] = concatenate([tmp_vec, tmp_phase], name="lane_%d" % i)  # None, 9, 8
 
         list_phase_pressure = []
@@ -302,8 +311,15 @@ class CoLightAgent(Agent):
             m1, m2 = phase.split("_")
             list_phase_pressure.append(add([lane_embedding(dic_lane[m1]), lane_embedding(dic_lane[m2])], name=phase))
 
-        constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
-                          name="constant")(num_vehicle_input)
+        for i in range(self.num_agents):  # TODO: hard code here
+            num_vehicle_slice = Lambda(slice_tensor_3, arguments={"index": i}, output_shape=[8], name="veh_%d" % i)(num_vehicle_input)  # None 8
+            if i == 0:
+                constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
+                                  name="constant_%d" % i)(num_vehicle_slice)
+            else:
+                _constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
+                                  name="constant_%d" % i)(num_vehicle_slice)
+                constant = concatenate([constant, _constant])  # None 9 8 7
         relation_embedding = Embedding(2, 4, name="relation_embedding")(constant)
 
         list_phase_pressure_recomb = []
@@ -576,7 +592,7 @@ class CoLightAgent(Agent):
 
         # =================== iCAP part ======================
         if self.dic_agent_conf["USE_FRAP"]:
-            feature = self.iCAP(In, MLP_layers)
+            feature = self.iCAP_2(In, MLP_layers)
         else:
             feature = self.MLP(In[0], MLP_layers)
         # =================== end of iCAP part ======================
