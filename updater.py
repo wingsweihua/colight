@@ -1,11 +1,9 @@
 import pickle
 import os
 from config import DIC_AGENTS,DIC_ENVS
-import pandas as pd
 import shutil
 import pandas as pd
 import time
-from multiprocessing import Pool
 import traceback
 import random
 import numpy as np
@@ -13,7 +11,7 @@ import numpy as np
 
 class Updater:
 
-    def __init__(self, cnt_round, dic_agent_conf, dic_exp_conf, dic_traffic_env_conf, dic_path, best_round=None, bar_round=None):
+    def __init__(self, cnt_round, dic_agent_conf, dic_exp_conf, dic_traffic_env_conf, dic_path):
 
         self.cnt_round = cnt_round
         self.dic_path = dic_path
@@ -50,7 +48,7 @@ class Updater:
         sample_set = []
         try:
             if self.dic_exp_conf["PRETRAIN"]:
-                    sample_file = open(os.path.join(self.dic_path["PATH_TO_PRETRAIN_WORK_DIRECTORY"],
+                sample_file = open(os.path.join(self.dic_path["PATH_TO_PRETRAIN_WORK_DIRECTORY"],
                                                 "train_round", "total_samples" + ".pkl"), "rb")
             elif self.dic_exp_conf["AGGREGATE"]:
                 sample_file = open(os.path.join(self.dic_path["PATH_TO_AGGREGATE_SAMPLES"],
@@ -74,15 +72,15 @@ class Updater:
             f.close()
             print('traceback.format_exc():\n%s' % traceback.format_exc())
             pass
-        if i %100 ==0:
+        if i % 100 == 0:
             print("load_sample for inter {0}".format(i))
         return sample_set
 
     def load_hidden_states_with_forget(self): # hidden state is a list [#time, agent, # dim]
         hidden_states_set = []
         try:
-            hidden_state_file = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round",
-                                                "total_hidden_states.pkl"), "rb")
+            hidden_state_file = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"],
+                                                  "train_round", "total_hidden_states.pkl"), "rb")
             try:
                 while True:
                     hidden_states_set.append(pickle.load(hidden_state_file))
@@ -110,11 +108,11 @@ class Updater:
             pass
         return hidden_states_set
 
-    def load_hidden_states(self): # hidden state is a list [#time, agent, # dim]
+    def load_hidden_states(self):  # hidden state is a list [#time, agent, # dim]
         hidden_states_set = []
         try:
-            hidden_state_file = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"], "train_round",
-                                                "total_hidden_states.pkl"), "rb")
+            hidden_state_file = open(os.path.join(self.dic_path["PATH_TO_WORK_DIRECTORY"],
+                                                  "train_round", "total_hidden_states.pkl"), "rb")
             try:
                 while True:
                     hidden_states_set.append(pickle.load(hidden_state_file))
@@ -142,7 +140,7 @@ class Updater:
         sample_set = []
         try:
             if self.dic_exp_conf["PRETRAIN"]:
-                    sample_file = open(os.path.join(self.dic_path["PATH_TO_PRETRAIN_WORK_DIRECTORY"],
+                sample_file = open(os.path.join(self.dic_path["PATH_TO_PRETRAIN_WORK_DIRECTORY"],
                                                 "train_round", "total_samples" + ".pkl"), "rb")
             elif self.dic_exp_conf["AGGREGATE"]:
                 sample_file = open(os.path.join(self.dic_path["PATH_TO_AGGREGATE_SAMPLES"],
@@ -181,7 +179,7 @@ class Updater:
             f.close()
             print('traceback.format_exc():\n%s' % traceback.format_exc())
             pass
-        if i %100 == 0:
+        if i % 100 == 0:
             print("load_sample for inter {0}".format(i))
         return sample_set
 
@@ -220,8 +218,8 @@ class Updater:
             print("Getting samples time: ", time.time()-get_samples_start_time)
 
             for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
-                    sample_set_list = samples_gcn_df.values.tolist()
-                    self.agents[i].prepare_Xs_Y(sample_set_list, self.dic_exp_conf)
+                sample_set_list = samples_gcn_df.values.tolist()
+                self.agents[i].prepare_Xs_Y(sample_set_list, self.dic_exp_conf)
 
         print("------------------Load samples time: ", time.time()-start_time)
 
@@ -239,8 +237,7 @@ class Updater:
         if self.dic_traffic_env_conf["ONE_MODEL"]:
             if self.dic_exp_conf["PRETRAIN"]:
                 self.agents[i].q_network.save(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
-                                             "{0}.h5".format(self.dic_exp_conf["TRAFFIC_FILE"][0]))
-                                             )
+                                                           "{0}.h5".format(self.dic_exp_conf["TRAFFIC_FILE"][0])))
                 shutil.copy(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
                                          "{0}.h5".format(self.dic_exp_conf["TRAFFIC_FILE"][0])),
                             os.path.join(self.dic_path["PATH_TO_MODEL"], "round_0.h5"))
@@ -253,10 +250,10 @@ class Updater:
 
         else:
             if self.dic_exp_conf["PRETRAIN"]:
-                self.agents[i].q_network.save(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
-                                             "{0}_inter_{1}.h5".format(self.dic_exp_conf["TRAFFIC_FILE"][0],
-                                                                       self.agents[i].intersection_id))
-                                             )
+                self.agents[i].q_network.save(os.path.join(
+                    self.dic_path["PATH_TO_PRETRAIN_MODEL"],
+                    "{0}_inter_{1}.h5".format(self.dic_exp_conf["TRAFFIC_FILE"][0],
+                                              self.agents[i].intersection_id)))
                 shutil.copy(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
                                          "{0}_inter_{1}.h5".format(self.dic_exp_conf["TRAFFIC_FILE"][0],
                                                                    self.agents[i].intersection_id)),
@@ -275,7 +272,6 @@ class Updater:
             print("update_network_for_agents", self.dic_traffic_env_conf['NUM_AGENTS'])
             for i in range(self.dic_traffic_env_conf['NUM_AGENTS']):
                 self.update_network(i)
-
 
 
 if __name__=="__main__":

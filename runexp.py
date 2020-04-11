@@ -22,7 +22,7 @@ ANON_PHASE_REPRE=[]
 def parse_args():
     parser = argparse.ArgumentParser()
     # The file folder to create/log in
-    parser.add_argument("--memo", type=str, default='0406_colight_8_phase_reward_pressure_state_pressure')
+    parser.add_argument("--memo", type=str, default='0411_colight_8_phase_reward_pressure_state_pressure')
     parser.add_argument("--env", type=int, default=1)  # env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
     parser.add_argument("--road_net", type=str, default='3_3')  # which road net you are going to run
@@ -32,39 +32,39 @@ def parse_args():
     global hangzhou_archive
     hangzhou_archive=False
     global TOP_K_ADJACENCY
-    TOP_K_ADJACENCY=5
+    TOP_K_ADJACENCY = 5
     global TOP_K_ADJACENCY_LANE
-    TOP_K_ADJACENCY_LANE=5
+    TOP_K_ADJACENCY_LANE = 5
     global NUM_ROUNDS
-    NUM_ROUNDS=100
+    NUM_ROUNDS = 100
     global EARLY_STOP
-    EARLY_STOP=False
+    EARLY_STOP = False
     global NEIGHBOR
     # TAKE CARE
-    NEIGHBOR=False
+    NEIGHBOR = False
     global SAVEREPLAY # if you want to relay your simulation, set it to be True
-    SAVEREPLAY=False
+    SAVEREPLAY = False
     global ADJACENCY_BY_CONNECTION_OR_GEO
     # TAKE CARE
     ADJACENCY_BY_CONNECTION_OR_GEO=False
 
     # modify:TOP_K_ADJACENCY in line 154
     global PRETRAIN
-    PRETRAIN=False
+    PRETRAIN = False
     parser.add_argument("--mod", type=str, default='CoLight')  # SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
     parser.add_argument("--cnt", type=int, default=3600)  # 3600
     parser.add_argument("--gen", type=int, default=4)  # 4
 
     parser.add_argument("-all", action="store_true", default=False)
-    parser.add_argument("--workers",type=int, default=7)
-    parser.add_argument("--onemodel",type=bool, default=False)
+    parser.add_argument("--workers", type=int, default=7)
+    parser.add_argument("--onemodel", type=bool, default=False)
 
     parser.add_argument("--visible_gpu", type=str, default="-1")
     global ANON_PHASE_REPRE
     tt=parser.parse_args()
     if 'CoLight_Signal' in tt.mod:
         # 12dim
-        ANON_PHASE_REPRE={
+        ANON_PHASE_REPRE = {
             # 0: [0, 0, 0, 0, 0, 0, 0, 0],
             1: [0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1],  # 'WSES',
             2: [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1],  # 'NSSS',
@@ -73,7 +73,7 @@ def parse_args():
         }
     else:
         # 12dim
-        ANON_PHASE_REPRE={
+        ANON_PHASE_REPRE = {
             1: [0, 1, 0, 1, 0, 0, 0, 0],
             2: [0, 0, 0, 0, 0, 1, 0, 1],
             3: [1, 0, 1, 0, 0, 0, 0, 0],
