@@ -47,13 +47,13 @@ class RepeatVector3D(Layer):
         self.times = times
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.times, input_shape[1],input_shape[2])
+        return input_shape[0], self.times, input_shape[1], input_shape[2]
 
     def call(self, inputs):
         # [batch,agent,dim]->[batch,1,agent,dim]
         # [batch,1,agent,dim]->[batch,agent,agent,dim]
 
-        return K.tile(K.expand_dims(inputs,1),[1,self.times,1,1])
+        return K.tile(K.expand_dims(inputs, 1), [1, self.times, 1, 1])
 
     def get_config(self):
         config = {'times': self.times}
@@ -79,18 +79,18 @@ class CoLightAgent(Agent):
         super(CoLightAgent, self).__init__(
             dic_agent_conf, dic_traffic_env_conf, dic_path,intersection_id)
 
-        self.att_regulatization=dic_agent_conf['att_regularization']
-        self.CNN_layers=dic_agent_conf['CNN_layers']
+        self.att_regulatization = dic_agent_conf['att_regularization']
+        self.CNN_layers = dic_agent_conf['CNN_layers']
         
-        #TODO: n_agents should pass as parameter
-        self.num_agents=dic_traffic_env_conf['NUM_INTERSECTIONS']
-        self.num_neighbors=min(dic_traffic_env_conf['TOP_K_ADJACENCY'],self.num_agents)
-        self.vec=np.zeros((1,self.num_neighbors))
-        self.vec[0][0]=1
+        # TODO: n_agents should pass as parameter
+        self.num_agents = dic_traffic_env_conf['NUM_INTERSECTIONS']
+        self.num_neighbors = min(dic_traffic_env_conf['TOP_K_ADJACENCY'], self.num_agents)
+        self.vec=np.zeros((1, self.num_neighbors))
+        self.vec[0][0] = 1
 
         self.num_actions = len(self.dic_traffic_env_conf["PHASE"][self.dic_traffic_env_conf['SIMULATOR_TYPE']])
         self.num_lanes = np.sum(np.array(list(self.dic_traffic_env_conf["LANE_NUM"].values())))
-        self.len_feature=self.compute_len_feature()
+        self.len_feature = self.compute_len_feature()
         self.memory = self.build_memory()
 
         if cnt_round == 0: 
@@ -268,7 +268,7 @@ class CoLightAgent(Agent):
         feature = self.MLP(feature, MLP_layers)
         return feature
 
-    def MultiHeadsAttModel(self,In_agent,In_neighbor,l=5, d=128, dv=16, dout=128, nv = 8,suffix=-1):
+    def MultiHeadsAttModel(self, In_agent, In_neighbor, l=5, d=128, dv=16, dout=128, nv=8, suffix=-1):
         """
         input:[bacth,agent,128]
         output:
@@ -279,7 +279,7 @@ class CoLightAgent(Agent):
         agent repr
         """
         print("In_agent.shape,In_neighbor.shape,l, d, dv, dout, nv", In_agent.shape,In_neighbor.shape,l, d, dv, dout, nv)
-        #[batch,agent,dim]->[batch,agent,1,dim]
+        # [batch,agent,dim]->[batch,agent,1,dim]
         agent_repr=Reshape((self.num_agents,1,d))(In_agent)
 
         """
@@ -294,39 +294,46 @@ class CoLightAgent(Agent):
         """
         attention computation
         """
-        #multi-head
-        #[batch,agent,1,dim]->[batch,agent,1,dv*nv]
-        agent_repr_head=Dense(dv*nv,activation='relu',kernel_initializer='random_normal',name='agent_repr_%d'%suffix)(agent_repr)
-        #[batch,agent,1,dv,nv]->[batch,agent,nv,1,dv]
+        # multi-head
+        # [batch,agent,1,dim]->[batch,agent,1,dv*nv]
+        agent_repr_head=Dense(
+            dv*nv,
+            activation='relu',
+            kernel_initializer='random_normal',
+            name='agent_repr_%d' % suffix)(agent_repr)
+        # [batch,agent,1,dv,nv]->[batch,agent,nv,1,dv]
         agent_repr_head=Reshape((self.num_agents,1,dv,nv))(agent_repr_head)
         agent_repr_head=Lambda(lambda x:K.permute_dimensions(x,(0,1,4,2,3)))(agent_repr_head)
-        #agent_repr_head=Lambda(lambda x:K.permute_dimensions(K.reshape(x,(-1,self.num_agents,1,dv,nv)),(0,1,4,2,3)))(agent_repr_head)
-        #[batch,agent,neighbor,dim]->[batch,agent,neighbor,dv*nv]
+        # agent_repr_head=Lambda(lambda x:K.permute_dimensions(K.reshape(x,(-1,self.num_agents,1,dv,nv)),(0,1,4,2,3)))(agent_repr_head)
+        # [batch,agent,neighbor,dim]->[batch,agent,neighbor,dv*nv]
 
         neighbor_repr_head=Dense(dv*nv,activation='relu',kernel_initializer='random_normal',name='neighbor_repr_%d'%suffix)(neighbor_repr)
-        #[batch,agent,neighbor,dv,nv]->[batch,agent,nv,neighbor,dv]
-        print("DEBUG",neighbor_repr_head.shape)
-        print("self.num_agents,self.num_neighbors,dv,nv", self.num_agents,self.num_neighbors,dv,nv)
-        neighbor_repr_head=Reshape((self.num_agents,self.num_neighbors,dv,nv))(neighbor_repr_head)
-        neighbor_repr_head=Lambda(lambda x:K.permute_dimensions(x,(0,1,4,2,3)))(neighbor_repr_head)
-        #neighbor_repr_head=Lambda(lambda x:K.permute_dimensions(K.reshape(x,(-1,self.num_agents,self.num_neighbors,dv,nv)),(0,1,4,2,3)))(neighbor_repr_head)        
-        #[batch,agent,nv,1,dv]x[batch,agent,nv,neighbor,dv]->[batch,agent,nv,1,neighbor]
+        # [batch,agent,neighbor,dv,nv]->[batch,agent,nv,neighbor,dv]
+        print("DEBUG", neighbor_repr_head.shape)
+        print("self.num_agents,self.num_neighbors,dv,nv", self.num_agents,self.num_neighbors, dv, nv)
+        neighbor_repr_head=Reshape((self.num_agents,self.num_neighbors, dv, nv))(neighbor_repr_head)
+        neighbor_repr_head=Lambda(lambda x: K.permute_dimensions(x,(0, 1, 4, 2, 3)))(neighbor_repr_head)
+        # neighbor_repr_head=Lambda(lambda x:K.permute_dimensions(K.reshape(x,(-1,self.num_agents,self.num_neighbors,dv,nv)),(0,1,4,2,3)))(neighbor_repr_head)
+        # [batch,agent,nv,1,dv]x[batch,agent,nv,neighbor,dv]->[batch,agent,nv,1,neighbor]
         att=Lambda(lambda x:K.softmax(K.batch_dot(x[0],x[1],axes=[4,4])))([agent_repr_head,neighbor_repr_head])
-        #[batch,agent,nv,1,neighbor]->[batch,agent,nv,neighbor]
+        # [batch,agent,nv,1,neighbor]->[batch,agent,nv,neighbor]
         att_record=Reshape((self.num_agents,nv,self.num_neighbors))(att)
 
-
-        #self embedding again
-        neighbor_hidden_repr_head=Dense(dv*nv,activation='relu',kernel_initializer='random_normal',name='neighbor_hidden_repr_%d'%suffix)(neighbor_repr)
-        neighbor_hidden_repr_head=Reshape((self.num_agents,self.num_neighbors,dv,nv))(neighbor_hidden_repr_head)
-        neighbor_hidden_repr_head=Lambda(lambda x:K.permute_dimensions(x,(0,1,4,2,3)))(neighbor_hidden_repr_head)
-        out=Lambda(lambda x:K.mean(K.batch_dot(x[0],x[1]),axis=2))([att,neighbor_hidden_repr_head])
+        # self embedding again
+        neighbor_hidden_repr_head = Dense(
+            dv*nv,
+            activation='relu',
+            kernel_initializer='random_normal',
+            name='neighbor_hidden_repr_%d' % suffix)(neighbor_repr)
+        neighbor_hidden_repr_head = Reshape((self.num_agents,self.num_neighbors, dv, nv))(neighbor_hidden_repr_head)
+        neighbor_hidden_repr_head = Lambda(lambda x:K.permute_dimensions(x, (0, 1, 4, 2, 3)))(neighbor_hidden_repr_head)
+        out=Lambda(lambda x: K.mean(K.batch_dot(x[0], x[1]), axis=2))([att,neighbor_hidden_repr_head])
         out=Reshape((self.num_agents,dv))(out)
-        out = Dense(dout, activation = "relu",kernel_initializer='random_normal',name='MLP_after_relation_%d'%suffix)(out)
+        out = Dense(dout, activation="relu",kernel_initializer='random_normal',name='MLP_after_relation_%d'%suffix)(out)
         return out,att_record
 
     def adjacency_index2matrix(self,adjacency_index):
-        #adjacency_index(the nearest K neighbors):[1,2,3]
+        # adjacency_index(the nearest K neighbors):[1,2,3]
         """
         if in 1*6 aterial and 
             - the 0th intersection,then the adjacency_index should be [0,1,2,3]
@@ -334,15 +341,15 @@ class CoLightAgent(Agent):
             - the 2nd intersection, then adj [2,0,1,3]
 
         """ 
-        #[batch,agents,neighbors]
-        adjacency_index_new=np.sort(adjacency_index,axis=-1)
-        l = to_categorical(adjacency_index_new,num_classes=self.num_agents)
+        # [batch,agents,neighbors]
+        adjacency_index_new=np.sort(adjacency_index, axis=-1)
+        l = to_categorical(adjacency_index_new, num_classes=self.num_agents)
         return l
 
     def action_att_predict(self,state,total_features=[],total_adjs=[],bar=False):
-        #state:[batch,agent,features and adj]
-        #return:act:[batch,agent],att:[batch,layers,agent,head,neighbors]
-        batch_size=len(state)
+        # state:[batch,agent,features and adj]
+        # return:act:[batch,agent],att:[batch,layers,agent,head,neighbors]
+        batch_size = len(state)
         if total_features==[] and total_adjs==[]:
             total_features,total_adjs=list(),list()
             for i in range(batch_size): 
@@ -367,24 +374,24 @@ class CoLightAgent(Agent):
                     adj.append(state[i][j]['adjacency_matrix'])
                 total_features.append(feature)
                 total_adjs.append(adj)
-            #feature:[agents,feature]
-            total_features=np.reshape(np.array(total_features),[batch_size,self.num_agents,-1])
-            total_adjs=self.adjacency_index2matrix(np.array(total_adjs))
-            #adj:[agent,neighbors]   
+            # feature:[agents,feature]
+            total_features = np.reshape(np.array(total_features), [batch_size, self.num_agents, -1])
+            total_adjs = self.adjacency_index2matrix(np.array(total_adjs))
+            # adj:[agent,neighbors]
         if bar:
-            all_output = self.q_network_bar.predict([total_features,total_adjs])
+            all_output = self.q_network_bar.predict([total_features, total_adjs])
         else:
-            all_output = self.q_network.predict([total_features,total_adjs])
-        action,attention =all_output[0],all_output[1]
+            all_output = self.q_network.predict([total_features, total_adjs])
+        action, attention = all_output[0], all_output[1]
 
-        #out: [batch,agent,action], att:[batch,layers,agent,head,neighbors]
+        # out: [batch,agent,action], att:[batch,layers,agent,head,neighbors]
         if len(action)>1:
-            return total_features,total_adjs,action,attention
+            return total_features, total_adjs, action, attention
 
-        #[batch,agent,1]
+        # [batch,agent,1]
         max_action=np.expand_dims(np.argmax(action,axis=-1),axis=-1)
         random_action=np.reshape(np.random.randint(self.num_actions,size=1*self.num_agents),(1,self.num_agents,1))
-        #[batch,agent,2]
+        # [batch,agent,2]
         possible_action=np.concatenate([max_action,random_action],axis=-1)
         selection=np.random.choice(
             [0,1],
@@ -396,13 +403,13 @@ class CoLightAgent(Agent):
 
     def choose_action(self, count, state):
 
-        ''' 
+        """
         choose the best action for current state 
         -input: state: [batch,agent,feature]  adj: [batch,agent,neighbors,agents]
         -output: out: [batch,agent,action], att:[batch,layers,agent,head,neighbors]
-        '''
-        act,attention=self.action_att_predict([state])
-        return act[0],attention[0] 
+        """
+        act, attention = self.action_att_predict([state])
+        return act[0], attention[0]
 
     def prepare_Xs_Y(self, memory, dic_exp_conf):
         """
@@ -426,8 +433,8 @@ class CoLightAgent(Agent):
 
         _state = []
         _next_state = []
-        _action=[]
-        _reward=[]
+        _action = []
+        _reward = []
 
         for i in range(len(sample_slice)):  
             _state.append([])
@@ -441,12 +448,11 @@ class CoLightAgent(Agent):
                 _action[i].append(action)
                 _reward[i].append(reward)
 
-
-        #target: [#agents,#samples,#num_actions]    
-        _features,_adjs,q_values,_=self.action_att_predict(_state)   
-        _next_features,_next_adjs,_,attention= self.action_att_predict(_next_state)
-        #target_q_values:[batch,agent,action]
-        _,_,target_q_values,_= self.action_att_predict(
+        # target: [#agents,#samples,#num_actions]
+        _features, _adjs, q_values, _ = self.action_att_predict(_state)
+        _next_features, _next_adjs, _, attention = self.action_att_predict(_next_state)
+        # target_q_values:[batch,agent,action]
+        _, _, target_q_values = self.action_att_predict(
             _next_state,
             total_features=_next_features,
             total_adjs=_next_adjs,
@@ -457,41 +463,40 @@ class CoLightAgent(Agent):
                 q_values[i][j][_action[i][j]] = _reward[i][j] / self.dic_agent_conf["NORMAL_FACTOR"] + self.dic_agent_conf["GAMMA"] * \
                                     np.max(target_q_values[i][j])
 
-
-        #self.Xs should be: [#agents,#samples,#features+#]
+        # self.Xs should be: [#agents,#samples,#features+#]
         self.Xs = [_features,_adjs]
-        self.Y=q_values.copy()
+        self.Y = q_values.copy()
         self.Y_total = [q_values.copy()]
         self.Y_total.append(attention)
         return 
 
-    #TODO: MLP_layers should be defined in the conf file
+    # TODO: MLP_layers should be defined in the conf file
     # TODO: CNN_layers should be defined in the conf file
     # TODO: CNN_heads should be defined in the conf file
     # TODO: Output_layers should be degined in the conf file
     def build_network(
         self,
-        MLP_layers=[32,32], 
+        MLP_layers = [32,32],
         # CNN_layers=[[32,32]],#[[4,32],[4,32]],
         # CNN_heads=[1],#[8,8],
-        Output_layers=[]):
-        CNN_layers=self.CNN_layers 
-        CNN_heads=[1]*len(CNN_layers)
+        Output_layers = []):
+        CNN_layers = self.CNN_layers
+        CNN_heads = [1]*len(CNN_layers)
         """
         layer definition
         """
         start_time=time.time()
         assert len(CNN_layers)==len(CNN_heads)
 
-        In=list()
+        In = list()
         """
         #[#agents,batch,feature_dim],[#agents,batch,neighbors,agents],[batch,1,neighbors]
         ->[#agentsxbatch,feature_dim],[#agentsxbatch,neighbors,agents],[batch,1,neighbors]
         """
-        #In: [batch,agent,feature]
-        #In: [batch,agent,neighbors,agents]
-        In.append(Input(shape=[self.num_agents,self.len_feature],name="feature"))
-        In.append(Input(shape=(self.num_agents,self.num_neighbors,self.num_agents),name="adjacency_matrix"))
+        # In: [batch,agent,feature]
+        # In: [batch,agent,neighbors,agents]
+        In.append(Input(shape=[self.num_agents, self.len_feature], name="feature"))
+        In.append(Input(shape=(self.num_agents, self.num_neighbors, self.num_agents), name="adjacency_matrix"))
         # In[0] has to be form of {'cur_phase': Input(8), 'lane_num_vehicle': Input(8)}
 
         Input_end_time=time.time()
@@ -510,14 +515,14 @@ class CoLightAgent(Agent):
 
         Embedding_end_time=time.time()
 
-        #TODO: remove the dense setting
-        #feature:[batch,agents,feature_dim]
+        # TODO: remove the dense setting
+        # feature:[batch,agents,feature_dim]
         att_record_all_layers=list()
         print("CNN_heads:", CNN_heads)
         for CNN_layer_index,CNN_layer_size in enumerate(CNN_layers):
-            print("CNN_heads[CNN_layer_index]:",CNN_heads[CNN_layer_index])
+            print("CNN_heads[CNN_layer_index]:", CNN_heads[CNN_layer_index])
             if CNN_layer_index==0:
-                h,att_record=self.MultiHeadsAttModel(
+                h, att_record=self.MultiHeadsAttModel(
                     feature,
                     In[1],
                     l=self.num_neighbors,
@@ -528,7 +533,7 @@ class CoLightAgent(Agent):
                     suffix=CNN_layer_index
                     )
             else:
-                h,att_record=self.MultiHeadsAttModel(
+                h, att_record=self.MultiHeadsAttModel(
                     h,
                     In[1],
                     l=self.num_neighbors,
@@ -541,9 +546,9 @@ class CoLightAgent(Agent):
             att_record_all_layers.append(att_record)
 
         if len(CNN_layers)>1:
-            att_record_all_layers=Concatenate(axis=1)(att_record_all_layers)
+            att_record_all_layers = Concatenate(axis=1)(att_record_all_layers)
         else:
-            att_record_all_layers=att_record_all_layers[0]
+            att_record_all_layers = att_record_all_layers[0]
 
         att_record_all_layers=Reshape(
             (len(CNN_layers),self.num_agents,CNN_heads[-1],self.num_neighbors)
@@ -571,9 +576,9 @@ class CoLightAgent(Agent):
         # model.compile(optimizer=Adam(lr = 0.0001), loss='mse')
         model.summary()
         network_end=time.time()
-        print('build_Input_end_time：',Input_end_time-start_time)
-        print('embedding_time:',Embedding_end_time-Input_end_time)
-        print('total time:',network_end-start_time)
+        print('build_Input_end_time：', Input_end_time-start_time)
+        print('embedding_time:', Embedding_end_time-Input_end_time)
+        print('total time:', network_end-start_time)
         return model
 
     def build_memory(self):
@@ -597,7 +602,7 @@ class CoLightAgent(Agent):
         hist = self.q_network.fit(self.Xs, self.Y_total, batch_size=batch_size, epochs=epochs,
                                   shuffle=False,
                                   verbose=2, validation_split=0.3,
-                                  callbacks=[early_stopping,TensorBoard(log_dir='./temp.tensorboard')])
+                                  callbacks=[early_stopping, TensorBoard(log_dir='./temp.tensorboard')])
 
     def build_network_from_copy(self, network_copy):
 
@@ -661,7 +666,7 @@ class CoLightAgent(Agent):
         # self.q_network_bar.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     dic_agent_conf={
         'att_regularization': False, 
         'rularization_rate': 0.03, 
