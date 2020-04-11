@@ -41,6 +41,14 @@ def slice_icap_2(x, index):
     return x[:, index, :]
 
 
+def slice_tensor_2(x, index):
+    x_shape = K.int_shape(x)
+    if len(x_shape) == 4:
+        return x[:, :, index, :]
+    elif len(x_shape) == 3:
+        return x[:, :, index]
+
+
 class RepeatVector3D(Layer):
     def __init__(self,times,**kwargs):
         super(RepeatVector3D, self).__init__(**kwargs)
@@ -197,7 +205,10 @@ class CoLightAgent(Agent):
 
         return h
 
-    def iCAP(self, In, MLP_layers):
+    def iCAP(self, In, MLP_layers):  # TODO: a) delete hard code for features; 2) change embed style
+        """
+        embed iCAP into Colight, process each intersection separately
+        """
         phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[8], name="inter_phase")(In[0])  # None, 9, 8
         num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[8], name="inter_num_vehicle")(In[0])
         p = Activation('sigmoid')(Embedding(2, 4, input_length=8)(phase_input))
@@ -218,6 +229,7 @@ class CoLightAgent(Agent):
                                        name="inter_num_vehicle_%d" % slice_ind)(num_vehicle_input)  # make this None 8
             dic_lane = {}
             for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
+                # TODO: if state feature is 12-d, choose 8 (excluding right turn) out of it
                 tmp_vec = d(
                     Lambda(slice_tensor, arguments={"index": i}, name="vec_%d_%d" % (i, slice_ind))(num_vehicle_slice))
                 tmp_phase = Lambda(slice_tensor, arguments={"index": i}, name="phase_%d_%d" % (i, slice_ind))(
@@ -263,9 +275,65 @@ class CoLightAgent(Agent):
             if slice_ind == 0:
                 feature = q_values
             else:
-                feature = concatenate([feature, q_values])
+                feature = concatenate([feature, q_values])  # TODO: is this concatenate correct?
         feature = Reshape((self.num_agents, self.num_actions))(feature)
         feature = self.MLP(feature, MLP_layers)
+        return feature
+
+    def iCAP_2(self, In, MLP_layers):  # TODO: a) delete hard code for features; 2) change embed style
+        """
+        embed iCAP into colight, process all intersections at once
+        """
+        phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[8], name="inter_phase")(In[0])  # None, 9, 8
+        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[8], name="inter_num_vehicle")(In[0])  # None, 9, 8/12
+        p = Activation('sigmoid')(Embedding(2, 4, input_length=8)(phase_input))
+        d = Dense(4, activation="sigmoid", name="num_vec_mapping")
+
+        dic_lane = {}
+        for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
+            tmp_vec = d(Lambda(slice_tensor_2, arguments={"index": i}, name="vec_%d" % i)(num_vehicle_input))  # None, 9, 4
+            tmp_phase = Lambda(slice_tensor_2, arguments={"index": i}, name="phase_%d" % i)(p)  # None, 9, 4
+            dic_lane[m] = concatenate([tmp_vec, tmp_phase], name="lane_%d" % i)  # None, 9, 8
+
+        list_phase_pressure = []
+        lane_embedding = Dense(16, activation="relu", name="lane_embedding")
+
+        for phase in self.dic_traffic_env_conf["PHASE"][self.dic_traffic_env_conf['SIMULATOR_TYPE']]:
+            m1, m2 = phase.split("_")
+            list_phase_pressure.append(add([lane_embedding(dic_lane[m1]), lane_embedding(dic_lane[m2])], name=phase))
+
+        constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
+                          name="constant")(num_vehicle_input)
+        relation_embedding = Embedding(2, 4, name="relation_embedding")(constant)
+
+        list_phase_pressure_recomb = []
+        num_phase = self.num_actions
+
+        for i in range(num_phase):
+            for j in range(num_phase):
+                if i != j:
+                    list_phase_pressure_recomb.append(
+                        concatenate([list_phase_pressure[i], list_phase_pressure[j]],
+                                    name="concat_compete_phase_%d_%d" % (i, j)))
+
+        list_phase_pressure_recomb = concatenate(list_phase_pressure_recomb, name="concat_all")  # None, 9, 1792
+        feature_map = Reshape((8, 7, 32))(list_phase_pressure_recomb)
+        lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu", name="lane_conv")(feature_map)
+
+        if self.dic_agent_conf["MERGE"] == "multiply":
+            relation_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
+                                name="relation_conv")(relation_embedding)
+            combine_feature = multiply([lane_conv, relation_conv], name="combine_feature")
+        else:
+            print("dic_agent_conf[MERGE] has to be multiply")
+
+        hidden_layer = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
+                              name="combine_conv")(combine_feature)
+        before_merge = Conv2D(1, kernel_size=(1, 1), activation="linear", name="befor_merge")(hidden_layer)
+        q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values")(Reshape((8, 7))(before_merge))
+        q_values = Reshape((self.num_agents, self.num_actions))(q_values)
+        feature = self.MLP(q_values, MLP_layers)
+
         return feature
 
     def MultiHeadsAttModel(self, In_agent, In_neighbor, l=5, d=128, dv=16, dout=128, nv=8, suffix=-1):
@@ -499,7 +567,7 @@ class CoLightAgent(Agent):
         In.append(Input(shape=(self.num_agents, self.num_neighbors, self.num_agents), name="adjacency_matrix"))
         # In[0] has to be form of {'cur_phase': Input(8), 'lane_num_vehicle': Input(8)}
 
-        Input_end_time=time.time()
+        Input_end_time = time.time()
         """
         Currently, the MLP layer 
         -input: [batch,agent,feature_dim]
@@ -513,7 +581,7 @@ class CoLightAgent(Agent):
             feature = self.MLP(In[0], MLP_layers)
         # =================== end of iCAP part ======================
 
-        Embedding_end_time=time.time()
+        Embedding_end_time = time.time()
 
         # TODO: remove the dense setting
         # feature:[batch,agents,feature_dim]
