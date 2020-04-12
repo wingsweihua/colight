@@ -528,9 +528,9 @@ class Intersection:
         dic_feature["vehicle_speed_img"] = None  # self._get_lane_vehicle_speed(self.list_entering_lanes)
         dic_feature["vehicle_acceleration_img"] = None
         dic_feature["vehicle_waiting_time_img"] = None  # self._get_lane_vehicle_accumulated_waiting_time(self.list_entering_lanes)
-        dic_feature["lane_num_vehicle"] = None,  # self._get_lane_num_vehicle(self.list_entering_lanes)
+        dic_feature["lane_num_vehicle"] = self._get_lane_num_vehicle(self.list_entering_lanes)
         dic_feature["pressure"] = [self._get_pressure()]
-        dic_feature["pressure_of_movement"] = self.get_pressure_of_movement()
+        # dic_feature["pressure_of_movement"] = self.get_pressure_of_movement()
 
         if self.fast_compute:
             dic_feature["coming_vehicle"] = None

@@ -283,17 +283,23 @@ class CoLightAgent(Agent):
             if slice_ind == 0:
                 feature = q_values
             else:
-                feature = concatenate([feature, q_values])  # TODO: is this concatenate correct?
+                feature = concatenate([feature, q_values])
         feature = Reshape((self.num_agents, self.num_actions))(feature)
         feature = self.MLP(feature, MLP_layers)
         return feature
 
-    def iCAP_2(self, In, MLP_layers):  # TODO: a) delete hard code for features; 2) change embed style
+    def iCAP_2(self, In, MLP_layers):  # TODO: a) delete hard code for features;
         """
         embed iCAP into colight, process all intersections at once
         """
         phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[self.num_agents, 8], name="inter_phase")(In[0])  # None, 9, 8
-        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[self.num_agents, 8], name="inter_num_vehicle")(In[0])  # None, 9, 8/12
+        feature_names = self.dic_traffic_env_conf['LIST_STATE_FEATURE']
+        the_feature = [a for a in feature_names if 'phase' not in a and 'adjacency' not in a][0]
+        if the_feature == 'lane_num_vehicle':
+            feature_dim = self.dic_traffic_env_conf['DIC_FEATURE_DIM']["D_" + the_feature.upper()][0] * self.num_lanes
+        else:
+            feature_dim = self.dic_traffic_env_conf['DIC_FEATURE_DIM']["D_" + the_feature.upper()][0]
+        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[self.num_agents, feature_dim], name="inter_num_vehicle")(In[0])  # None, 9, 8/12
         p = Activation('sigmoid')(Embedding(2, 4, input_length=8)(phase_input))
         d = Dense(4, activation="sigmoid", name="num_vec_mapping")
 

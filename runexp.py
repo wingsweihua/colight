@@ -255,7 +255,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # "vehicle_speed_img",
                 # "vehicle_acceleration_img",
                 # "vehicle_waiting_time_img",
-                # "lane_num_vehicle",
+                "lane_num_vehicle",
                 # "lane_num_vehicle_been_stopped_thres01",
                 # "lane_num_vehicle_been_stopped_thres1",
                 # "lane_queue_length",
@@ -266,7 +266,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # "coming_vehicle",
                 # "leaving_vehicle",
                 # "pressure"
-                "pressure_of_movement",
+                # "pressure_of_movement",
                 # "adjacency_matrix",
                 # "lane_queue_length",
                 # "connectivity",
