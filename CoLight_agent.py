@@ -43,17 +43,17 @@ def slice_icap_2(x, index):
 
 def slice_tensor_2(x, index):
     x_shape = K.int_shape(x)
-    if len(x_shape) == 3:
+    if len(x_shape) == 4:
         return x[:, :, index, :]
-    elif len(x_shape) == 2:
+    elif len(x_shape) == 3:
         return x[:, :, index]
 
 
 def slice_tensor_3(x, index):
     x_shape = K.int_shape(x)
-    if len(x_shape) == 3:
-        return x[:, :, index, :]
-    elif len(x_shape) == 2:
+    if len(x_shape) == 5:
+        return x[:, index, :, :, :]
+    elif len(x_shape) == 3:
         return x[:, index, :]
 
 
@@ -292,8 +292,8 @@ class CoLightAgent(Agent):
         """
         embed iCAP into colight, process all intersections at once
         """
-        phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[8], name="inter_phase")(In[0])  # None, 9, 8
-        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[8], name="inter_num_vehicle")(In[0])  # None, 9, 8/12
+        phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[self.num_agents, 8], name="inter_phase")(In[0])  # None, 9, 8
+        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[self.num_agents, 8], name="inter_num_vehicle")(In[0])  # None, 9, 8/12
         p = Activation('sigmoid')(Embedding(2, 4, input_length=8)(phase_input))
         d = Dense(4, activation="sigmoid", name="num_vec_mapping")
 
@@ -318,8 +318,10 @@ class CoLightAgent(Agent):
                                   name="constant_%d" % i)(num_vehicle_slice)
             else:
                 _constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
-                                  name="constant_%d" % i)(num_vehicle_slice)
-                constant = concatenate([constant, _constant])  # None 9 8 7
+                                   name="constant_%d" % i)(num_vehicle_slice)
+                constant = concatenate([constant, _constant])
+
+        constant = Reshape((self.num_agents, 8, 7))(constant)
         relation_embedding = Embedding(2, 4, name="relation_embedding")(constant)
 
         list_phase_pressure_recomb = []
@@ -333,20 +335,27 @@ class CoLightAgent(Agent):
                                     name="concat_compete_phase_%d_%d" % (i, j)))
 
         list_phase_pressure_recomb = concatenate(list_phase_pressure_recomb, name="concat_all")  # None, 9, 1792
-        feature_map = Reshape((8, 7, 32))(list_phase_pressure_recomb)
-        lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu", name="lane_conv")(feature_map)
+        feature_map = Reshape((self.num_agents, 8, 7, 32))(list_phase_pressure_recomb)  # None, 9, 8, 7, 32
+        _lane_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu")
+        _relation_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu")
+        _hidden_layer = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu")
+        _before_merge = Conv2D(1, kernel_size=(1, 1), activation="linear")
 
-        if self.dic_agent_conf["MERGE"] == "multiply":
-            relation_conv = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
-                                name="relation_conv")(relation_embedding)
-            combine_feature = multiply([lane_conv, relation_conv], name="combine_feature")
-        else:
-            print("dic_agent_conf[MERGE] has to be multiply")
-
-        hidden_layer = Conv2D(self.dic_agent_conf["D_DENSE"], kernel_size=(1, 1), activation="relu",
-                              name="combine_conv")(combine_feature)
-        before_merge = Conv2D(1, kernel_size=(1, 1), activation="linear", name="befor_merge")(hidden_layer)
-        q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values")(Reshape((8, 7))(before_merge))
+        for i in range(self.num_agents):
+            feature_map_i = Lambda(slice_tensor_3, arguments={"index": i}, output_shape=[8, 7, 32],
+                                   name="feature_map_%d" % i)(feature_map)
+            lane_conv = _lane_conv(feature_map_i)
+            relation_embedding_i = Lambda(slice_tensor_3, arguments={"index": i}, output_shape=[8, 7, 4],
+                                   name="relation_embedding_%d" % i)(relation_embedding)
+            relation_conv = _relation_conv(relation_embedding_i)
+            combine_feature = multiply([lane_conv, relation_conv])
+            hidden_layer = _hidden_layer(combine_feature)
+            before_merge = _before_merge(hidden_layer)
+            if i == 0:
+                q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values_%d" % i)(Reshape((8, 7))(before_merge))
+            else:
+                _q_values = Lambda(lambda x: K.sum(x, axis=2), name="q_values_%d" % i)(Reshape((8, 7))(before_merge))
+                q_values = concatenate([q_values, _q_values])
         q_values = Reshape((self.num_agents, self.num_actions))(q_values)
         feature = self.MLP(q_values, MLP_layers)
 
