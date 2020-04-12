@@ -315,7 +315,8 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 "STRAIGHT": 1
             },
 
-            "list_lane_order": ["WL", "WT", "EL", "ET", "NL", "NT", "SL", "ST"],
+            "list_lane_order": ["WL", "WT", "EL", "ET", "SL", "ST", "NL", "NT"],
+            # this order should be consistent with the order defined in AnonEnv
 
             "PHASE": {
                 "sumo": {

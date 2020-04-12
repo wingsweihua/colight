@@ -57,6 +57,15 @@ def slice_tensor_3(x, index):
         return x[:, index, :]
 
 
+def slice_tensor_4(x, index):
+    for ind in index:
+        if ind == 0:
+            tensor = Reshape((1,))(x[:, ind])
+        else:
+            tensor = concatenate([tensor, Reshape((1,))(x[:, ind])])
+    return tensor
+
+
 class RepeatVector3D(Layer):
     def __init__(self,times,**kwargs):
         super(RepeatVector3D, self).__init__(**kwargs)
@@ -142,7 +151,6 @@ class CoLightAgent(Agent):
 
                 else:
                     # not use model pool
-                    # TODO how to load network for multiple intersections?
                     # print('init q load')
                     self.load_network("round_{0}_inter_{1}".format(cnt_round-1, self.intersection_id))
                     # print('init q_bar load')
@@ -213,7 +221,7 @@ class CoLightAgent(Agent):
 
         return h
 
-    def iCAP(self, In, MLP_layers):  # TODO: a) delete hard code for features; 2) change embed style
+    def iCAP(self, In, MLP_layers):
         """
         embed iCAP into Colight, process each intersection separately
         """
@@ -237,7 +245,6 @@ class CoLightAgent(Agent):
                                        name="inter_num_vehicle_%d" % slice_ind)(num_vehicle_input)  # make this None 8
             dic_lane = {}
             for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
-                # TODO: if state feature is 12-d, choose 8 (excluding right turn) out of it
                 tmp_vec = d(
                     Lambda(slice_tensor, arguments={"index": i}, name="vec_%d_%d" % (i, slice_ind))(num_vehicle_slice))
                 tmp_phase = Lambda(slice_tensor, arguments={"index": i}, name="phase_%d_%d" % (i, slice_ind))(
@@ -288,26 +295,40 @@ class CoLightAgent(Agent):
         feature = self.MLP(feature, MLP_layers)
         return feature
 
-    def iCAP_2(self, In, MLP_layers):  # TODO: a) delete hard code for features;
+    def iCAP_2(self, In, MLP_layers):
         """
         embed iCAP into colight, process all intersections at once
         """
-        phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[self.num_agents, 8], name="inter_phase")(In[0])  # None, 9, 8
+        phase_input = Lambda(slice_icap, arguments={'name': 'phase'}, output_shape=[self.num_agents, 8],
+                             name="inter_phase")(In[0])  # None, 9, 8
         feature_names = self.dic_traffic_env_conf['LIST_STATE_FEATURE']
         the_feature = [a for a in feature_names if 'phase' not in a and 'adjacency' not in a][0]
         if the_feature == 'lane_num_vehicle':
             feature_dim = self.dic_traffic_env_conf['DIC_FEATURE_DIM']["D_" + the_feature.upper()][0] * self.num_lanes
         else:
             feature_dim = self.dic_traffic_env_conf['DIC_FEATURE_DIM']["D_" + the_feature.upper()][0]
-        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'}, output_shape=[self.num_agents, feature_dim], name="inter_num_vehicle")(In[0])  # None, 9, 8/12
+        num_vehicle_input = Lambda(slice_icap, arguments={'name': 'num_vehicle'},  # None, 9, 8/12
+                                   output_shape=[self.num_agents, feature_dim], name="inter_num_vehicle")(In[0])
         p = Activation('sigmoid')(Embedding(2, 4, input_length=8)(phase_input))
         d = Dense(4, activation="sigmoid", name="num_vec_mapping")
 
         dic_lane = {}
+        use_lane_ind = []  # indices of all but right lanes
         for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
-            tmp_vec = Lambda(slice_tensor_2, arguments={"index": i}, output_shape=[self.num_agents], name="vec_%d" % i)(num_vehicle_input)
+            if feature_dim == 12:  # 12 means the feature contains right lane, which should be discarded
+                if i % 2 == 0:
+                    j = i // 2 * 3  # select all but right lanes
+                else:
+                    j = i // 2 * 3 + 1
+                use_lane_ind.append(j)
+                tmp_vec = Lambda(slice_tensor_2, arguments={"index": j}, output_shape=[self.num_agents],
+                                 name="vec_%d" % j)(num_vehicle_input)
+            else:
+                tmp_vec = Lambda(slice_tensor_2, arguments={"index": i}, output_shape=[self.num_agents],
+                                 name="vec_%d" % i)(num_vehicle_input)
             tmp_vec = d(Reshape((self.num_agents, 1))(tmp_vec))  # None, 9, 4
-            tmp_phase = Lambda(slice_tensor_2, arguments={"index": i}, output_shape=[self.num_agents, 4], name="phase_%d" % i)(p)  # None, 9, 4
+            tmp_phase = Lambda(slice_tensor_2, arguments={"index": i}, output_shape=[self.num_agents, 4],
+                               name="phase_%d" % i)(p)  # None, 9, 4
             dic_lane[m] = concatenate([tmp_vec, tmp_phase], name="lane_%d" % i)  # None, 9, 8
 
         list_phase_pressure = []
@@ -317,8 +338,13 @@ class CoLightAgent(Agent):
             m1, m2 = phase.split("_")
             list_phase_pressure.append(add([lane_embedding(dic_lane[m1]), lane_embedding(dic_lane[m2])], name=phase))
 
-        for i in range(self.num_agents):  # TODO: hard code here
-            num_vehicle_slice = Lambda(slice_tensor_3, arguments={"index": i}, output_shape=[8], name="veh_%d" % i)(num_vehicle_input)  # None 8
+        for i in range(self.num_agents):
+            num_vehicle_slice = Lambda(slice_tensor_3, arguments={"index": i}, output_shape=[feature_dim],
+                                       name="veh_%d" % i)(num_vehicle_input)  # None 8
+            if feature_dim == 12:
+                num_vehicle_slice = Lambda(slice_tensor_4, arguments={"index": use_lane_ind},
+                                           output_shape=[8],)(num_vehicle_slice)
+
             if i == 0:
                 constant = Lambda(relation, arguments={"dic_traffic_env_conf": self.dic_traffic_env_conf},
                                   name="constant_%d" % i)(num_vehicle_slice)
