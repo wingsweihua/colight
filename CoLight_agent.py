@@ -670,7 +670,7 @@ class CoLightAgent(Agent):
                     )
             att_record_all_layers.append(att_record)
 
-        if len(CNN_layers)>1:
+        if len(CNN_layers) > 1:
             att_record_all_layers = Concatenate(axis=1)(att_record_all_layers)
         else:
             att_record_all_layers = att_record_all_layers[0]
@@ -681,7 +681,10 @@ class CoLightAgent(Agent):
 
         # TODO: remove dense net
         for layer_index,layer_size in enumerate(Output_layers):
-                h=Dense(layer_size,activation='relu',kernel_initializer='random_normal',name='Dense_q_%d'%layer_index)(h)
+                h = Dense(layer_size,
+                          activation='relu',
+                          kernel_initializer='random_normal',
+                          name='Dense_q_%d' % layer_index)(h)
         # action prediction layer
         # [batch,agent,32]->[batch,agent,action]
         out = Dense(self.num_actions,kernel_initializer='random_normal',name='action_layer')(h)
@@ -732,9 +735,8 @@ class CoLightAgent(Agent):
     def build_network_from_copy(self, network_copy):
 
         '''Initialize a Q network from a copy'''
-        network_structure = network_copy.to_json()
         network_weights = network_copy.get_weights()
-        network = model_from_json(network_structure, custom_objects={"RepeatVector3D": RepeatVector3D})
+        network = self.build_network()
         network.set_weights(network_weights)
 
         if self.att_regulatization:
@@ -750,11 +752,8 @@ class CoLightAgent(Agent):
 
         return network
 
-    def load_network(self, file_name, file_path=None):
-        json_file = open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.json".format(file_name)), 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        self.q_network = model_from_json(loaded_model_json, custom_objects={'RepeatVector3D':RepeatVector3D})
+    def load_network(self, file_name):
+        self.q_network = self.build_network()
         self.q_network.load_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.h5".format(file_name)))
         self.q_network.compile(
             optimizer=RMSprop(lr=self.dic_agent_conf["LEARNING_RATE"]),
@@ -762,11 +761,8 @@ class CoLightAgent(Agent):
             loss_weights=[1, 0])
         print("succeed in loading model %s" % file_name)
 
-    def load_network_bar(self, file_name, file_path=None):
-        json_file = open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.json".format(file_name)), 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        self.q_network_bar = model_from_json(loaded_model_json, custom_objects={'RepeatVector3D':RepeatVector3D})
+    def load_network_bar(self, file_name):
+        self.q_network_bar = self.build_network()
         self.q_network_bar.load_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.h5".format(file_name)))
         self.q_network_bar.compile(
             optimizer=RMSprop(lr=self.dic_agent_conf["LEARNING_RATE"]),
@@ -775,20 +771,11 @@ class CoLightAgent(Agent):
 
         print("succeed in loading model bar %s" % file_name)
 
-    def save_network(self, file_name):
+    def save_network(self, file_name):  # no need to save model structure since it will be built
         self.q_network.save_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.h5".format(file_name)))
-        model_json = self.q_network.to_json()
-        with open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}.json".format(file_name)), "w") as json_file:
-            json_file.write(model_json)
-
-        # self.q_network.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
 
     def save_network_bar(self, file_name):
         self.q_network_bar.save_weights(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}_bar.h5".format(file_name)))
-        model_json = self.q_network_bar.to_json()
-        with open(os.path.join(self.dic_path["PATH_TO_MODEL"], "{}_bar.json".format(file_name)), "w") as json_file:
-            json_file.write(model_json)
-        # self.q_network_bar.save(os.path.join(self.dic_path["PATH_TO_MODEL"], "%s.h5" % file_name))
 
 
 if __name__ == '__main__':
