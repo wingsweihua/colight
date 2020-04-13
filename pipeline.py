@@ -199,8 +199,6 @@ class Pipeline:
             dic_exp_conf=dic_exp_conf,
             dic_traffic_env_conf=dic_traffic_env_conf,
             dic_path=dic_path,
-            best_round=best_round,
-            bar_round=bar_round
         ) 
 
         updater.load_sample_for_agents()
@@ -214,8 +212,8 @@ class Pipeline:
         model_pool.dump_model_pool()
 
         return
-        #self.best_round = model_pool.get()
-        #print("self.best_round", self.best_round)
+        # self.best_round = model_pool.get()
+        # print("self.best_round", self.best_round)
 
     def downsample(self, path_to_log, i):
 

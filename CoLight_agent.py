@@ -577,7 +577,7 @@ class CoLightAgent(Agent):
         _features, _adjs, q_values, _ = self.action_att_predict(_state)
         _next_features, _next_adjs, _, attention = self.action_att_predict(_next_state)
         # target_q_values:[batch,agent,action]
-        _, _, target_q_values = self.action_att_predict(
+        _, _, target_q_values, _ = self.action_att_predict(
             _next_state,
             total_features=_next_features,
             total_adjs=_next_adjs,
