@@ -36,7 +36,7 @@ def parse_args():
     global TOP_K_ADJACENCY_LANE
     TOP_K_ADJACENCY_LANE = 5
     global NUM_ROUNDS
-    NUM_ROUNDS = 2
+    NUM_ROUNDS = 100
     global EARLY_STOP
     EARLY_STOP = False
     global NEIGHBOR
@@ -53,7 +53,7 @@ def parse_args():
     PRETRAIN = False
     parser.add_argument("--mod", type=str, default='CoLight')  # SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
     parser.add_argument("--cnt", type=int, default=3600)  # 3600
-    parser.add_argument("--gen", type=int, default=1)  # 4
+    parser.add_argument("--gen", type=int, default=4)  # 4
 
     parser.add_argument("-all", action="store_true", default=False)
     parser.add_argument("--workers", type=int, default=7)
