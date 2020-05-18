@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument("--memo", type=str, default='colight_8_phase_reward_queue_length_state_lane_num_vehicle')
     parser.add_argument("--env", type=int, default=1)  # env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
-    parser.add_argument("--road_net", type=str, default='6_6')  # which road net you are going to run
+    parser.add_argument("--road_net", type=str, default='3_3')  # which road net you are going to run
     parser.add_argument("--volume", type=str, default='300')  # '300'
     parser.add_argument("--suffix", type=str, default="0.3_bi")  # 0.3
 
