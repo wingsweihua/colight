@@ -22,10 +22,10 @@ ANON_PHASE_REPRE=[]
 def parse_args():
     parser = argparse.ArgumentParser()
     # The file folder to create/log in
-    parser.add_argument("--memo", type=str, default='0412_colight_FRAP_phase_reward_pressure_state_lane_num_vehicle')
+    parser.add_argument("--memo", type=str, default='colight_8_phase_reward_queue_length_state_lane_num_vehicle')
     parser.add_argument("--env", type=int, default=1)  # env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
-    parser.add_argument("--road_net", type=str, default='3_3')  # which road net you are going to run
+    parser.add_argument("--road_net", type=str, default='6_6')  # which road net you are going to run
     parser.add_argument("--volume", type=str, default='300')  # '300'
     parser.add_argument("--suffix", type=str, default="0.3_bi")  # 0.3
 
@@ -133,7 +133,7 @@ def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_pat
 def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers, onemodel):
 
     # main(args.memo, args.env, args.road_net, args.gui, args.volume, args.ratio, args.mod, args.cnt, args.gen)
-    #Jinan_3_4
+    # Jinan_3_4
     NUM_COL = int(road_net.split('_')[0])
     NUM_ROW = int(road_net.split('_')[1])
     num_intersections = NUM_ROW * NUM_COL
@@ -152,7 +152,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
         traffic_file_list = [i+ ".xml" for i in traffic_file_list ]
 
     process_list = []
-    n_workers = workers     #len(traffic_file_list)
+    n_workers = workers  # len(traffic_file_list)
     multi_process = True
 
     global PRETRAIN
@@ -163,7 +163,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
 
             "RUN_COUNTS": cnt,
             "MODEL_NAME": mod,
-            "TRAFFIC_FILE": [traffic_file], # here: change to multi_traffic
+            "TRAFFIC_FILE": [traffic_file],  # here: change to multi_traffic
 
             "ROADNET_FILE": "roadnet_{0}.json".format(road_net),
 
@@ -195,7 +195,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "ROTATION": True,
             "N_LAYER": 2,
             "TRAFFIC_FILE": traffic_file,
-            "USE_FRAP": True
+            "USE_FRAP": False
         }
 
         global TOP_K_ADJACENCY
@@ -305,8 +305,8 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 "sum_lane_num_vehicle_left": 0,  # -1
                 "sum_duration_vehicle_left": 0,
                 "sum_num_vehicle_been_stopped_thres01": 0,
-                "sum_num_vehicle_been_stopped_thres1": 0,  # -0.25,
-                "pressure": -0.25
+                "sum_num_vehicle_been_stopped_thres1": -0.25,
+                "pressure": 0  # -0.25
             },
 
             "LANE_NUM": {
@@ -394,12 +394,12 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 for i in range(4):
                     dic_traffic_env_conf_extra["LIST_STATE_FEATURE"].append(feature+"_"+str(i))
 
-        if mod in ['CoLight','GCN','SimpleDQNOne']:
+        if mod in ['CoLight', 'GCN', 'SimpleDQNOne']:
             dic_traffic_env_conf_extra["NUM_AGENTS"] = 1
             dic_traffic_env_conf_extra['ONE_MODEL'] = False
             if "adjacency_matrix" not in dic_traffic_env_conf_extra['LIST_STATE_FEATURE'] and \
                 "adjacency_matrix_lane" not in dic_traffic_env_conf_extra['LIST_STATE_FEATURE'] and \
-                mod not in ['SimpleDQNOne']:
+                    mod not in ['SimpleDQNOne']:
                 dic_traffic_env_conf_extra['LIST_STATE_FEATURE'].append("adjacency_matrix")
                 dic_traffic_env_conf_extra['LIST_STATE_FEATURE'].append("adjacency_matrix_lane")
                 if dic_traffic_env_conf_extra['ADJACENCY_BY_CONNECTION_OR_GEO']:
@@ -488,7 +488,6 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 print("traffic to join", k)
                 process_list[k].join()
                 print("traffic finish join", k)
-
 
     return memo
 

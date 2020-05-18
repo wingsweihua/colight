@@ -278,7 +278,7 @@ class Pipeline:
         if self.dic_exp_conf["PRETRAIN"]:
             if os.listdir(self.dic_path["PATH_TO_PRETRAIN_MODEL"]): 
                 for i in range(self.dic_traffic_env_conf["NUM_AGENTS"]):
-                    #TODO:only suitable for CoLight
+                    # TODO:only suitable for CoLight
                     shutil.copy(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
                                             "round_0_inter_%d.h5" % i),
                                 os.path.join(self.dic_path["PATH_TO_MODEL"], "round_0_inter_%d.h5"%i))

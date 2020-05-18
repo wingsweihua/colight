@@ -89,13 +89,13 @@ class Generator:
 
             for i in range(self.dic_traffic_env_conf["NUM_AGENTS"]):
 
-                if self.dic_exp_conf["MODEL_NAME"] in ["CoLight","GCN", "SimpleDQNOne"]:
+                if self.dic_exp_conf["MODEL_NAME"] in ["CoLight", "GCN", "SimpleDQNOne"]:
                     one_state = state
                     if self.dic_exp_conf["MODEL_NAME"] == 'CoLight':
                         action, _ = self.agents[i].choose_action(step_num, one_state)
                     elif self.dic_exp_conf["MODEL_NAME"] == 'GCN':
                         action = self.agents[i].choose_action(step_num, one_state)
-                    else: # simpleDQNOne
+                    else:  # simpleDQNOne
                         if True:
                             action = self.agents[i].choose_action(step_num, one_state)
                         else:

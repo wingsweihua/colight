@@ -22,10 +22,11 @@ from keras.utils import np_utils,to_categorical
 from keras.engine.topology import Layer
 from keras.callbacks import EarlyStopping, TensorBoard
 from frap import slice_tensor, relation
-# SEED=6666
-# random.seed(SEED)
-# np.random.seed(SEED)
-# tf.set_random_seed(SEED)
+
+SEED=6666
+random.seed(SEED)
+np.random.seed(SEED)
+tf.set_random_seed(SEED)
 
 
 def slice_icap(x, name=None):
@@ -687,7 +688,7 @@ class CoLightAgent(Agent):
                           name='Dense_q_%d' % layer_index)(h)
         # action prediction layer
         # [batch,agent,32]->[batch,agent,action]
-        out = Dense(self.num_actions,kernel_initializer='random_normal',name='action_layer')(h)
+        out = Dense(self.num_actions, kernel_initializer='random_normal',name='action_layer')(h)
         # out:[batch,agent,action], att:[batch,layers,agent,head,neighbors]
         model = Model(inputs=In,outputs=[out, att_record_all_layers])
 
