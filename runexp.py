@@ -53,7 +53,7 @@ def parse_args():
     PRETRAIN = False
     parser.add_argument("--mod", type=str, default='CoLight')  # SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
     parser.add_argument("--cnt", type=int, default=3600)  # 3600
-    parser.add_argument("--gen", type=int, default=1)  # 4
+    parser.add_argument("--gen", type=int, default=4)  # 4
 
     parser.add_argument("-all", action="store_true", default=False)
     parser.add_argument("--workers", type=int, default=7)
