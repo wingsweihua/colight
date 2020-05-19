@@ -120,7 +120,7 @@ class ConstructSample:
         reward["sum_duration_vehicle_left"] = np.sum(rs["lane_sum_duration_vehicle_left"])
         reward["sum_num_vehicle_been_stopped_thres01"] = np.sum(rs["lane_num_vehicle_been_stopped_thres01"])
         reward["sum_num_vehicle_been_stopped_thres1"] = np.sum(rs["lane_num_vehicle_been_stopped_thres1"])
-        ##TODO pressure
+        # TODO pressure
         reward['pressure'] = np.sum(rs["pressure"])
         return reward
 
