@@ -27,6 +27,13 @@ random.seed(SEED)
 np.random.seed(SEED)
 tf.set_random_seed(SEED)
 
+use_lane_ind = []  # all lanes to be used instead of right lanes
+for ii in range(8):
+    if ii % 2 == 0:
+        use_lane_ind.append(ii // 2 * 3)
+    else:
+        use_lane_ind.append(ii // 2 * 3 + 1)
+
 
 def slice_icap(x, name=None):
     if name == 'phase':
@@ -320,14 +327,12 @@ class CoLightAgent(Agent):
         d = Dense(4, activation="sigmoid", name="num_vec_mapping")
 
         dic_lane = {}
-        use_lane_ind = []  # indices of all but right lanes
         for i, m in enumerate(self.dic_traffic_env_conf["list_lane_order"]):
             if feature_dim == 12:  # 12 means the feature contains right lane, which should be discarded
                 if i % 2 == 0:
                     j = i // 2 * 3  # select all but right lanes
                 else:
                     j = i // 2 * 3 + 1
-                use_lane_ind.append(j)
                 tmp_vec = Lambda(slice_tensor_2, arguments={"index": j}, output_shape=[self.num_agents],
                                  name="vec_%d" % j)(num_vehicle_input)
             else:
@@ -551,7 +556,7 @@ class CoLightAgent(Agent):
             ind_end = len(memory)
             print("memory size before forget: {0}".format(ind_end))
 
-            if self.dic_agent_conf['PRIORITY']:
+            if self.dic_agent_conf['PRIORITY']:  # TODO: what is this? if needed, then extend to multi-intersection
                 print("priority")
                 sample_slice = []
                 num_sample_list = [
@@ -593,64 +598,41 @@ class CoLightAgent(Agent):
                     # print(sample[0]['lane_num_vehicle'], sample[0]['cur_phase'])
                     rotation_matrix = rotation_matrix_4_p
                     new_sample = copy.deepcopy(sample)
-                    new_sample[0][the_feature] = np.dot(new_sample[0][the_feature], rotation_matrix)
-                    new_sample[0]['cur_phase'] = np.dot(new_sample[0]['cur_phase'], rotation_matrix)
-                    new_sample[2][the_feature] = np.dot(new_sample[2][the_feature], rotation_matrix)
-                    new_sample[2]['cur_phase'] = np.dot(new_sample[2]['cur_phase'], rotation_matrix)
+                    for j in range(self.num_agents):
+                        if the_feature == 'lane_num_vehicle':
+                            feature = np.array(new_sample[j][0][the_feature])
+                            feature[use_lane_ind] = np.dot(feature[use_lane_ind], rotation_matrix)
+                            new_sample[j][0][the_feature] = list(feature)
+                            new_sample[j][0]['cur_phase'] = np.dot(new_sample[j][0]['cur_phase'], rotation_matrix)
+
+                            feature = np.array(new_sample[j][2][the_feature])
+                            feature[use_lane_ind] = np.dot(feature[use_lane_ind], rotation_matrix)
+                            new_sample[j][2][the_feature] = list(feature)
+                            new_sample[j][2]['cur_phase'] = np.dot(new_sample[j][2]['cur_phase'], rotation_matrix)
+                        else:
+                            new_sample[j][0][the_feature] = np.dot(new_sample[j][0][the_feature], rotation_matrix)
+                            new_sample[j][0]['cur_phase'] = np.dot(new_sample[j][0]['cur_phase'], rotation_matrix)
+                            new_sample[j][2][the_feature] = np.dot(new_sample[j][2][the_feature], rotation_matrix)
+                            new_sample[j][2]['cur_phase'] = np.dot(new_sample[j][2]['cur_phase'], rotation_matrix)
                     new_sample_slice.append(sample)
                     new_sample_slice.append(new_sample)
                 sample_slice = new_sample_slice
-
-            dic_state_feature_arrays = {}
-            for feature_name in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-                dic_state_feature_arrays[feature_name] = []
-            Y = []
-
-            for i in range(len(sample_slice)):
-                state, action, next_state, reward, instant_reward, _ = sample_slice[i]
-
-                for feature_name in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-                    dic_state_feature_arrays[feature_name].append(state[feature_name])
-
-                _state = []
-                _next_state = []
-                for feature_name in self.dic_traffic_env_conf["LIST_STATE_FEATURE"]:
-                    _state.append([state[feature_name]])
-                    _next_state.append([next_state[feature_name]])
-                target = self.q_network.predict(_state)
-
-                next_state_qvalues = self.q_network_bar.predict(_next_state)
-
-                if self.dic_agent_conf["LOSS_FUNCTION"] == "mean_squared_error":
-                    final_target = np.copy(target[0])
-                    final_target[action] = reward / self.dic_agent_conf["NORMAL_FACTOR"] + self.dic_agent_conf[
-                        "GAMMA"] * \
-                                           np.max(next_state_qvalues[0])
-                elif self.dic_agent_conf["LOSS_FUNCTION"] == "categorical_crossentropy":
-                    raise NotImplementedError
-
-                Y.append(final_target)
-
-            self.Xs = [np.array(dic_state_feature_arrays[feature_name]) for feature_name in
-                       self.dic_traffic_env_conf["LIST_STATE_FEATURE"]]
-            self.Y = np.array(Y)
-            return
-
-        ind_end = len(memory)
-        print("memory size before forget: {0}".format(ind_end))
-        # use all the samples to pretrain, i.e., without forgetting
-        if dic_exp_conf["PRETRAIN"] or dic_exp_conf["AGGREGATE"]:
-            sample_slice = memory
-        # forget
         else:
-            ind_sta = max(0, ind_end - self.dic_agent_conf["MAX_MEMORY_LEN"])
-            memory_after_forget = memory[ind_sta: ind_end]
-            print("memory size after forget:", len(memory_after_forget))
+            ind_end = len(memory)
+            print("memory size before forget: {0}".format(ind_end))
+            # use all the samples to pretrain, i.e., without forgetting
+            if dic_exp_conf["PRETRAIN"] or dic_exp_conf["AGGREGATE"]:
+                sample_slice = memory
+            # forget
+            else:
+                ind_sta = max(0, ind_end - self.dic_agent_conf["MAX_MEMORY_LEN"])
+                memory_after_forget = memory[ind_sta: ind_end]
+                print("memory size after forget:", len(memory_after_forget))
 
-            # sample the memory
-            sample_size = min(self.dic_agent_conf["SAMPLE_SIZE"], len(memory_after_forget))
-            sample_slice = random.sample(memory_after_forget, sample_size)
-            print("memory samples number:", sample_size)
+                # sample the memory
+                sample_size = min(self.dic_agent_conf["SAMPLE_SIZE"], len(memory_after_forget))
+                sample_slice = random.sample(memory_after_forget, sample_size)
+                print("memory samples number:", sample_size)
 
         _state = []
         _next_state = []

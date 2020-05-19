@@ -195,7 +195,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "N_LAYER": 2,
             "TRAFFIC_FILE": traffic_file,
             "USE_FRAP": dic_exp_conf_extra['USE_FRAP'],
-            "PRIORITY": True,
+            "PRIORITY": False,
             "ROTATION_INPUT": True
         }
 
