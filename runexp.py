@@ -265,7 +265,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # "terminal",
                 # "coming_vehicle",
                 # "leaving_vehicle",
-                "pressure"
+                "pressure",
                 "pressure_of_movement",
                 # "adjacency_matrix",
                 # "lane_queue_length",
