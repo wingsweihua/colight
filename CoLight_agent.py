@@ -564,7 +564,7 @@ class CoLightAgent(Agent):
                     one_sample = memory[i]
                     # print("one_sample", one_sample)
                     # ave_num_veh = int(np.average(np.array(one_sample[0]['lane_num_vehicle'])))
-                    ave_num_veh = max(np.array(one_sample[0][the_feature]))
+                    ave_num_veh = max(np.array(one_sample[0][0][the_feature]))
                     interval_id = ave_num_veh // 10
                     if num_sample_list[interval_id] > 0:
                         sample_slice.append(one_sample)
