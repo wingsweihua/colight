@@ -22,7 +22,7 @@ ANON_PHASE_REPRE=[]
 def parse_args():
     parser = argparse.ArgumentParser()
     # The file folder to create/log in
-    parser.add_argument("--memo", type=str, default='colight_8_phase_reward_queue_length_state_pressure')
+    parser.add_argument("--memo", type=str, default='colight_FRAP_reward_queue_length_state_pressure')
     parser.add_argument("--env", type=int, default=1)  # env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
     parser.add_argument("--road_net", type=str, default='3_3')  # which road net you are going to run
@@ -181,7 +181,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "AGGREGATE": False,
             "DEBUG": False,
             "EARLY_STOP": EARLY_STOP,
-
+            "USE_FRAP": True  # change here to specify whether to use FRAP
         }
 
         dic_agent_conf_extra = {
@@ -192,10 +192,11 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "UPDATE_Q_BAR_FREQ": 5,
             "MERGE": "multiply",
             # network
-            "ROTATION": True,
             "N_LAYER": 2,
             "TRAFFIC_FILE": traffic_file,
-            "USE_FRAP": False
+            "USE_FRAP": dic_exp_conf_extra['USE_FRAP'],
+            "PRIORITY": True,
+            "ROTATION_INPUT": True
         }
 
         global TOP_K_ADJACENCY
