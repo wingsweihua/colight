@@ -2,4 +2,4 @@ networkx
 pandas
 matplotlib
 keras==2.1
-tensorflow==1.11
+tensorflow==2.5.3
