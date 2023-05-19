@@ -1,1 +1,7 @@
-.idea/*
+*.idea/
+*.py[cod]
+model/
+records/
+summary/
+temp.tensorboard/
+errors/

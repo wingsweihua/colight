@@ -50,7 +50,7 @@ class Generator:
 
             for i in range(dic_traffic_env_conf['NUM_AGENTS']):
                 agent_name = self.dic_exp_conf["MODEL_NAME"]
-                #the CoLight_Signal needs to know the lane adj in advance, from environment's intersection list
+                # the CoLight_Signal needs to know the lane adj in advance, from environment's intersection list
                 if agent_name=='CoLight_Signal':
                     agent = DIC_AGENTS[agent_name](
                         dic_agent_conf=self.dic_agent_conf,
@@ -73,12 +73,6 @@ class Generator:
                 self.agents[i] = agent
             print("Create intersection agent time: ", time.time()-start_time)
 
-
-
-
-
-
-
     def generate(self):
 
         reset_env_start_time = time.time()
@@ -95,13 +89,13 @@ class Generator:
 
             for i in range(self.dic_traffic_env_conf["NUM_AGENTS"]):
 
-                if self.dic_exp_conf["MODEL_NAME"] in ["CoLight","GCN", "SimpleDQNOne"]:
+                if self.dic_exp_conf["MODEL_NAME"] in ["CoLight", "GCN", "SimpleDQNOne"]:
                     one_state = state
                     if self.dic_exp_conf["MODEL_NAME"] == 'CoLight':
                         action, _ = self.agents[i].choose_action(step_num, one_state)
                     elif self.dic_exp_conf["MODEL_NAME"] == 'GCN':
                         action = self.agents[i].choose_action(step_num, one_state)
-                    else: # simpleDQNOne
+                    else:  # simpleDQNOne
                         if True:
                             action = self.agents[i].choose_action(step_num, one_state)
                         else:

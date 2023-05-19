@@ -176,8 +176,6 @@ class Pipeline:
             else:
                 return 0
 
-
-
     def generator_wrapper(self, cnt_round, cnt_gen, dic_path, dic_exp_conf, dic_agent_conf, dic_traffic_env_conf,
                           best_round=None):
         generator = Generator(cnt_round=cnt_round,
@@ -201,8 +199,6 @@ class Pipeline:
             dic_exp_conf=dic_exp_conf,
             dic_traffic_env_conf=dic_traffic_env_conf,
             dic_path=dic_path,
-            best_round=best_round,
-            bar_round=bar_round
         ) 
 
         updater.load_sample_for_agents()
@@ -215,10 +211,9 @@ class Pipeline:
         model_pool.model_compare(cnt_round)
         model_pool.dump_model_pool()
 
-
         return
-        #self.best_round = model_pool.get()
-        #print("self.best_round", self.best_round)
+        # self.best_round = model_pool.get()
+        # print("self.best_round", self.best_round)
 
     def downsample(self, path_to_log, i):
 
@@ -244,7 +239,6 @@ class Pipeline:
                 print("Error occurs when READING pickles when down sampling for inter {0}, {1}".format(i, f_logging_data))
                 print('traceback.format_exc():\n%s' % traceback.format_exc())
                 print("----------------------------")
-
 
     def downsample_for_system(self, path_to_log, dic_traffic_env_conf):
         for i in range(dic_traffic_env_conf['NUM_INTERSECTIONS']):
@@ -272,7 +266,6 @@ class Pipeline:
         for inter_id in range(start, stop):
             print("make construct_sample_wrapper for ", inter_id)
             cs.make_reward(inter_id)
-        
 
     def run(self, multi_process=False):
 
@@ -285,7 +278,7 @@ class Pipeline:
         if self.dic_exp_conf["PRETRAIN"]:
             if os.listdir(self.dic_path["PATH_TO_PRETRAIN_MODEL"]): 
                 for i in range(self.dic_traffic_env_conf["NUM_AGENTS"]):
-                    #TODO:only suitable for CoLight
+                    # TODO:only suitable for CoLight
                     shutil.copy(os.path.join(self.dic_path["PATH_TO_PRETRAIN_MODEL"],
                                             "round_0_inter_%d.h5" % i),
                                 os.path.join(self.dic_path["PATH_TO_MODEL"], "round_0_inter_%d.h5"%i))
@@ -424,7 +417,6 @@ class Pipeline:
             cs = ConstructSample(path_to_samples=train_round, cnt_round=cnt_round,
                                  dic_traffic_env_conf=self.dic_traffic_env_conf)
             cs.make_reward_for_system()
-
 
             # EvaluateSample()
             making_samples_end_time = time.time()

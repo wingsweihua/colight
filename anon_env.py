@@ -166,8 +166,18 @@ class Intersection:
         # =====  intersection settings =====
         self.list_approachs = ["W", "E", "N", "S"]
         self.dic_approach_to_node = {"W": 2, "E": 0, "S": 3, "N": 1}
+        self.dic_exiting_approach = {
+            'W0': 'N',  # west left turn leads to N
+            'W1': 'E',
+            'E0': 'S',
+            'E1': 'W',
+            'S0': 'W',
+            'S1': 'N',
+            'N0': 'E',
+            'N1': 'S'
+        }
         # self.dic_entering_approach_to_edge = {
-        #    approach: "road{0}_{1}_{2}".format(self.dic_approach_to_node[approach], light_id) for approach in self.list_approachs}
+        # approach: "road{0}_{1}_{2}".format(self.dic_approach_to_node[approach], light_id) for approach in self.list_approachs}
 
         self.dic_entering_approach_to_edge = {"W": "road_{0}_{1}_0".format(inter_id[0] - 1, inter_id[1])}
         self.dic_entering_approach_to_edge.update({"E": "road_{0}_{1}_2".format(inter_id[0] + 1, inter_id[1])})
@@ -175,8 +185,9 @@ class Intersection:
         self.dic_entering_approach_to_edge.update({"N": "road_{0}_{1}_3".format(inter_id[0], inter_id[1] + 1)})
 
         self.dic_exiting_approach_to_edge = {
-            approach: "road_{0}_{1}_{2}".format(inter_id[0], inter_id[1], self.dic_approach_to_node[approach]) for
-        approach in self.list_approachs}
+            approach: "road_{0}_{1}_{2}".format(inter_id[0], inter_id[1], self.dic_approach_to_node[approach])
+            for approach in self.list_approachs
+        }
         self.dic_entering_approach_lanes = {"W": [0], "E": [0], "S": [0], "N": [0]}
         self.dic_exiting_approach_lanes = {"W": [0], "E": [0], "S": [0], "N": [0]}
 
@@ -187,7 +198,6 @@ class Intersection:
         self.num_grid = int(self.length_lane // self.length_grid)
 
         self.list_phases = dic_traffic_env_conf["PHASE"][dic_traffic_env_conf['SIMULATOR_TYPE']]
-
 
         # generate all lanes
         self.list_entering_lanes = []
@@ -307,7 +317,7 @@ class Intersection:
                     sys.exit("action not recognized\n action must be 0 or 1")
 
             elif action_pattern == "set": # set to certain phase
-                self.next_phase_to_set_index = self.DIC_PHASE_MAP[action] # if multi_phase, need more adjustment
+                self.next_phase_to_set_index = action + 1 # if multi_phase, need more adjustment
 
             # set phase
             if self.current_phase_index == self.next_phase_to_set_index: # the light phase keeps unchanged
@@ -320,7 +330,7 @@ class Intersection:
                 df = pd.DataFrame(df)
                 df = df.transpose()
                 df.to_csv(path_to_log_file, mode='a', header=False, index=False)
-                #traci.trafficlights.setRedYellowGreenState(
+                # traci.trafficlights.setRedYellowGreenState(
                 #    self.node_light, self.all_yellow_phase_str)
                 self.current_phase_index = self.all_yellow_phase_index
                 self.all_yellow_flag = True
@@ -335,9 +345,8 @@ class Intersection:
         self.dic_vehicle_speed_previous_step = self.dic_vehicle_speed_current_step
         self.dic_vehicle_distance_previous_step = self.dic_vehicle_distance_current_step
 
-
     def update_current_measurements_map(self, simulator_state):
-        ## need change, debug in seeing format
+        # need change, debug in seeing format
         def _change_lane_vehicle_dic_to_list(dic_lane_vehicle):
             list_lane_vehicle = []
 
@@ -380,14 +389,13 @@ class Intersection:
         self._update_left_time(list_vehicle_new_left_entering_lane)
 
         # update vehicle minimum speed in history, # to be implemented
-        #self._update_vehicle_min_speed()
+        # self._update_vehicle_min_speed()
 
         # update feature
         self._update_feature_map(simulator_state)
 
-
     def update_current_measurements(self):
-        ## need change, debug in seeing format
+        # need change, debug in seeing format
         def _change_lane_vehicle_dic_to_list(dic_lane_vehicle):
             list_lane_vehicle = []
 
@@ -401,9 +409,8 @@ class Intersection:
         else:
             self.current_phase_duration = 1
 
-
         self.dic_lane_vehicle_current_step =[] # = self.eng.get_lane_vehicles()
-        #not implement
+        # not implement
         flow_tmp = self.eng.get_lane_vehicles()
         self.dic_lane_vehicle_current_step = {key: None for key in self.list_entering_lanes}
         for lane in self.list_entering_lanes:
@@ -433,8 +440,6 @@ class Intersection:
 
         # update feature
         self._update_feature()
-
-
 
     def _update_leave_entering_approach_vehicle(self):
 
@@ -466,8 +471,8 @@ class Intersection:
                 self.dic_vehicle_arrive_leave_time[vehicle] = \
                     {"enter_time": ts, "leave_time": np.nan}
             else:
-                #print("vehicle: %s already exists in entering lane!"%vehicle)
-                #sys.exit(-1)
+                # print("vehicle: %s already exists in entering lane!"%vehicle)
+                # sys.exit(-1)
                 pass
 
     def _update_left_time(self, list_vehicle_left):
@@ -480,7 +485,6 @@ class Intersection:
             except KeyError:
                 print("vehicle not recorded when entering")
                 sys.exit(-1)
-
 
     def update_neighbor_info(self, neighbors, dic_feature):
         # print(dic_feature)
@@ -514,20 +518,19 @@ class Intersection:
             target_dict[key+"_"+suffix] = target_dict.pop(key)
         return target_dict
 
-
     def _update_feature_map(self, simulator_state):
 
         dic_feature = dict()
 
         dic_feature["cur_phase"] = [self.current_phase_index]
         dic_feature["time_this_phase"] = [self.current_phase_duration]
-        dic_feature["vehicle_position_img"] = None #self._get_lane_vehicle_position(self.list_entering_lanes)
-        dic_feature["vehicle_speed_img"] = None #self._get_lane_vehicle_speed(self.list_entering_lanes)
+        dic_feature["vehicle_position_img"] = None  # self._get_lane_vehicle_position(self.list_entering_lanes)
+        dic_feature["vehicle_speed_img"] = None  # self._get_lane_vehicle_speed(self.list_entering_lanes)
         dic_feature["vehicle_acceleration_img"] = None
-        dic_feature["vehicle_waiting_time_img"] = None #self._get_lane_vehicle_accumulated_waiting_time(self.list_entering_lanes)
-
+        dic_feature["vehicle_waiting_time_img"] = None  # self._get_lane_vehicle_accumulated_waiting_time(self.list_entering_lanes)
         dic_feature["lane_num_vehicle"] = self._get_lane_num_vehicle(self.list_entering_lanes)
-        dic_feature["pressure"] = None # [self._get_pressure()]
+        dic_feature["pressure"] = None,  # [self._get_pressure()]
+        dic_feature["pressure_of_movement"] = None,  # self.get_pressure_of_movement()
 
         if self.fast_compute:
             dic_feature["coming_vehicle"] = None
@@ -536,21 +539,16 @@ class Intersection:
             dic_feature["coming_vehicle"] = self._get_coming_vehicles(simulator_state)
             dic_feature["leaving_vehicle"] = self._get_leaving_vehicles(simulator_state)
 
-
-
-        dic_feature["lane_num_vehicle_been_stopped_thres01"] = None # self._get_lane_num_vehicle_been_stopped(0.1, self.list_entering_lanes)
+        dic_feature["lane_num_vehicle_been_stopped_thres01"] = None  # self._get_lane_num_vehicle_been_stopped(0.1, self.list_entering_lanes)
         dic_feature["lane_num_vehicle_been_stopped_thres1"] = self._get_lane_num_vehicle_been_stopped(1, self.list_entering_lanes)
         dic_feature["lane_queue_length"] = None # self._get_lane_queue_length(self.list_entering_lanes)
         dic_feature["lane_num_vehicle_left"] = None
         dic_feature["lane_sum_duration_vehicle_left"] = None
-        dic_feature["lane_sum_waiting_time"] = None #self._get_lane_sum_waiting_time(self.list_entering_lanes)
+        dic_feature["lane_sum_waiting_time"] = None  # self._get_lane_sum_waiting_time(self.list_entering_lanes)
         dic_feature["terminal"] = None
 
-
-        dic_feature["adjacency_matrix"] = self._get_adjacency_row() # TODO this feature should be a dict? or list of lists
-
-        dic_feature["adjacency_matrix_lane"] = self._get_adjacency_row_lane() #row: entering_lane # columns: [inputlanes, outputlanes]
-
+        dic_feature["adjacency_matrix"] = self._get_adjacency_row()  # TODO this feature should be a dict? or list of lists
+        dic_feature["adjacency_matrix_lane"] = self._get_adjacency_row_lane()  # row: entering_lane # columns: [inputlanes, outputlanes]
         dic_feature['connectivity'] = self._get_connectivity(self.neighbor_lanes_ENWS)
 
         self.dic_feature = dic_feature
@@ -570,15 +568,15 @@ class Intersection:
         return position_counter
 
     def _get_coming_vehicles(self, simulator_state):
-        ## TODO f vehicle position   eng.get_vehicle_distance()  ||  eng.get_lane_vehicles()
+        # TODO f vehicle position   eng.get_vehicle_distance()  ||  eng.get_lane_vehicles()
 
         coming_distribution = []
-        ## dimension = num_lane*3*num_list_entering_lanes
+        # dimension = num_lane*3*num_list_entering_lanes
 
         lane_vid_mapping_dict = simulator_state['get_lane_vehicles']
         vid_distance_mapping_dict = simulator_state['get_vehicle_distance']
 
-        ## TODO LANE LENGTH = 300
+        # TODO LANE LENGTH = 300
         bins = np.linspace(0, 300, 4).tolist()
 
         for lane in self.list_entering_lanes:
@@ -588,17 +586,16 @@ class Intersection:
                 coming_vehicle_position.append(vid_distance_mapping_dict[vehicle])
             coming_distribution.extend(self.lane_position_mapper(coming_vehicle_position, bins))
 
-
         return coming_distribution
 
     def _get_leaving_vehicles(self, simulator_state):
         leaving_distribution = []
-        ## dimension = num_lane*3*num_list_entering_lanes
+        # dimension = num_lane*3*num_list_entering_lanes
 
         lane_vid_mapping_dict = simulator_state['get_lane_vehicles']
         vid_distance_mapping_dict = simulator_state['get_vehicle_distance']
 
-        ## TODO LANE LENGTH = 300
+        # TODO LANE LENGTH = 300
         bins = np.linspace(0, 300, 4).tolist()
 
         for lane in self.list_exiting_lanes:
@@ -611,9 +608,8 @@ class Intersection:
         return leaving_distribution
 
     def _get_pressure(self):
-        ##TODO eng.get_vehicle_distance(), another way to calculate pressure & queue length
+        # TODO eng.get_vehicle_distance(), another way to calculate pressure & queue length
 
-        pressure = 0
         all_enter_car_queue = 0
         for lane in self.list_entering_lanes:
             all_enter_car_queue += self.dic_lane_waiting_vehicle_count_current_step[lane]
@@ -629,10 +625,29 @@ class Intersection:
 
         return p
 
+    def get_pressure_of_movement(self):
+        _pressure_of_movement = []
+        for lane in self.list_entering_lanes:
+            if int(lane[-1:]) == 2:
+                continue
+            _approach = list(self.dic_entering_approach_to_edge.keys())[
+                list(self.dic_entering_approach_to_edge.values()).index(lane[0:-2])]
+            _direction = lane[-1:]
+            _exit_approach = self.dic_exiting_approach[_approach + _direction]
+            _exiting_lanes = [self.dic_exiting_approach_to_edge[_exit_approach] + "_0",
+                              self.dic_exiting_approach_to_edge[_exit_approach] + "_1"]
+            _lane_num_vehicle_in = self.dic_lane_waiting_vehicle_count_current_step[lane]
+            _lane_num_vehicle_out = [
+                self.dic_lane_waiting_vehicle_count_current_step[exiting_lane]
+                for exiting_lane in _exiting_lanes
+            ]
+            _pressure_of_movement.append(np.abs(_lane_num_vehicle_in - np.mean(_lane_num_vehicle_out)))
+        return _pressure_of_movement
+
     def _get_lane_queue_length(self, list_lanes):
-        '''
+        """
         queue length for each lane
-        '''
+        """
         return [self.dic_lane_waiting_vehicle_count_current_step[lane] for lane in list_lanes]
 
     def _get_lane_num_vehicle(self, list_lanes):
@@ -715,7 +730,6 @@ class Intersection:
         except:
             return None, None
 
-
     def _get_lane_vehicle_speed(self, list_lanes):
         return [self.dic_vehicle_speed_current_step[lane] for lane in list_lanes]
 
@@ -753,14 +767,14 @@ class Intersection:
         dic_reward["sum_duration_vehicle_left"] = None
         dic_reward["sum_num_vehicle_been_stopped_thres01"] = None
         dic_reward["sum_num_vehicle_been_stopped_thres1"] = np.sum(self.dic_feature["lane_num_vehicle_been_stopped_thres1"])
-
-        dic_reward['pressure'] = None # np.sum(self.dic_feature["pressure"])
+        dic_reward['pressure'] = None,  # np.sum(self.dic_feature["pressure"])
 
         reward = 0
         for r in dic_reward_info:
             if dic_reward_info[r] != 0:
                 reward += dic_reward_info[r] * dic_reward[r]
         return reward
+
 
 class AnonEnv:
     list_intersection_id = [
@@ -783,13 +797,14 @@ class AnonEnv:
         if self.dic_traffic_env_conf["MIN_ACTION_TIME"] <= self.dic_traffic_env_conf["YELLOW_TIME"]:
             print ("MIN_ACTION_TIME should include YELLOW_TIME")
             pass
-            #raise ValueError
+            # raise ValueError
 
         # touch new inter_{}.pkl (if exists, remove)
-        for inter_ind in range(self.dic_traffic_env_conf["NUM_INTERSECTIONS"]):
-            path_to_log_file = os.path.join(self.path_to_log, "inter_{0}.pkl".format(inter_ind))
-            f = open(path_to_log_file, "wb")
-            f.close()
+        # for inter_ind in range(self.dic_traffic_env_conf["NUM_INTERSECTIONS"]):
+        #     path_to_log_file = os.path.join(self.path_to_log, "inter_{0}.pkl".format(inter_ind))
+        #
+        #     f = open(path_to_log_file, "wb")
+        #     f.close()
 
     def reset(self):
 
@@ -815,7 +830,6 @@ class AnonEnv:
         self.eng = engine.Engine(os.path.join(self.path_to_work_directory,"cityflow.config"), thread_num=1)
         # self.load_roadnet()
         # self.load_flow()
-
 
         # get adjacency
         if self.dic_traffic_env_conf["USE_LANE_ADJACENCY"]:
@@ -853,7 +867,6 @@ class AnonEnv:
         for inter in self.list_intersection:
             inter.build_adjacency_row_lane(self.lane_id_to_index)
 
-
         # get new measurements
         system_state_start_time = time.time()
         if self.dic_traffic_env_conf["FAST_COMPUTE"]:
@@ -875,7 +888,7 @@ class AnonEnv:
             inter.update_current_measurements_map(self.system_states)
         print("Update_current_measurements_map time: ", time.time()-update_start_time)
 
-        #update neighbor's info
+        # update neighbor's info
         neighbor_start_time = time.time()
         if self.dic_traffic_env_conf["NEIGHBOR"]:
             for inter in self.list_intersection:
@@ -924,7 +937,6 @@ class AnonEnv:
 
             self._inner_step(action_in_sec)
 
-
             # get reward
             if self.dic_traffic_env_conf['DEBUG']:
                 start_time = time.time()
@@ -933,7 +945,6 @@ class AnonEnv:
 
             if self.dic_traffic_env_conf['DEBUG']:
                 print("Reward time: {}".format(time.time()-start_time))
-
 
             for j in range(len(reward)):
                 average_reward_action_list[j] = (average_reward_action_list[j] * i + reward[j]) / (i + 1)
@@ -998,7 +1009,7 @@ class AnonEnv:
         for inter in self.list_intersection:
             inter.update_current_measurements_map(self.system_states)
 
-        #update neighbor's info
+        # update neighbor's info
         if self.dic_traffic_env_conf["NEIGHBOR"]:
             for inter in self.list_intersection:
                 neighbor_inter_ids = inter.neighbor_ENWS
@@ -1010,22 +1021,21 @@ class AnonEnv:
                         neighbor_inters.append(None)
                 inter.dic_feature = inter.update_neighbor_info(neighbor_inters, deepcopy(inter.dic_feature))
 
-
         # print("Update_current_measurements_map time: ", time.time()-update_start_time)
 
         if self.dic_traffic_env_conf['DEBUG']:
             print("Update measurements time: {}".format(time.time()-start_time))
 
-        #self.log_lane_vehicle_position()
+        # self.log_lane_vehicle_position()
         # self.log_first_vehicle()
-        #self.log_phase()
+        # self.log_phase()
 
     def load_roadnet(self, roadnetFile=None):
         print("Start load roadnet")
         start_time = time.time()
         if not roadnetFile:
             roadnetFile = "roadnet_1_1.json"
-        #print("/n/n", os.path.join(self.path_to_work_directory, roadnetFile))
+        # print("/n/n", os.path.join(self.path_to_work_directory, roadnetFile))
         self.eng.load_roadnet(os.path.join(self.path_to_work_directory, roadnetFile))
         print("successfully load roadnet:{0}, time: {1}".format(roadnetFile,time.time()-start_time))
 
@@ -1369,7 +1379,6 @@ class AnonEnv:
                 edge_id_dict[road['id']]['num_of_lane'] = len(road['lanes'])
                 edge_id_dict[road['id']]['length'] = np.sqrt(np.square(pd.DataFrame(road['points'])).sum(axis=1)).sum()
 
-
             # set inter id to index dict
             inter_id_to_index = {}
             index = 0
@@ -1402,12 +1411,13 @@ class AnonEnv:
                             traffic_light_node_dict[i]['entering_lane_ENWS']['lane_ids'].append(neighboring_lanes)
                             traffic_light_node_dict[i]['entering_lane_ENWS']['lane_length'].append(value['length'])
 
-
             lane_id_dict = roadnet.net_lane_dict
             total_lane_num = len(lane_id_dict.keys())
+
             # output an adjacentcy matrix for all the intersections
             # each row stands for a lane id,
             # each column is a list with two elements: first is the lane's entering_lane_LSR, second is the lane's leaving_lane_LSR
+
             def _get_top_k_lane(lane_id_list, top_k_input):
                 top_k_lane_indexes = []
                 for i in range(top_k_input):
@@ -1416,11 +1426,9 @@ class AnonEnv:
                 return top_k_lane_indexes
 
             adjacency_matrix_lane = {}
-            for i in lane_id_dict.keys(): # Todo lane_ids should be in an order
+            for i in lane_id_dict.keys():  # Todo lane_ids should be in an order
                 adjacency_matrix_lane[i] = [_get_top_k_lane(lane_id_dict[i]['input_lanes'], top_k_lane),
                                             _get_top_k_lane(lane_id_dict[i]['output_lanes'], top_k_lane)]
-
-
 
             for i in traffic_light_node_dict.keys():
                 location_1 = traffic_light_node_dict[i]['location']

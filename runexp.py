@@ -1,15 +1,10 @@
 import config
 import copy
 from pipeline import Pipeline
-import os
 import time
 from multiprocessing import Process
 import argparse
 import os
-import matplotlib
-# matplotlib.use('TkAgg')
-
-from script import get_traffic_volume
 
 multi_process = True
 TOP_K_ADJACENCY=-1
@@ -23,61 +18,62 @@ ADJACENCY_BY_CONNECTION_OR_GEO=False
 hangzhou_archive=True
 ANON_PHASE_REPRE=[]
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     # The file folder to create/log in
-    parser.add_argument("--memo", type=str, default='0515_afternoon_Colight_6_6_bi')#1_3,2_2,3_3,4_4
-    parser.add_argument("--env", type=int, default=1) #env=1 means you will run CityFlow
+    parser.add_argument("--memo", type=str, default='after_change_colight_8_phase_reward_ql_state_lnv')
+    parser.add_argument("--env", type=int, default=1)  # env=1 means you will run CityFlow
     parser.add_argument("--gui", type=bool, default=False)
-    parser.add_argument("--road_net", type=str, default='6_6')#'1_2') # which road net you are going to run
-    parser.add_argument("--volume", type=str, default='300')#'300'
-    parser.add_argument("--suffix", type=str, default="0.3_bi")#0.3
+    parser.add_argument("--road_net", type=str, default='3_3')  # which road net you are going to run
+    parser.add_argument("--volume", type=str, default='300')  # '300'
+    parser.add_argument("--suffix", type=str, default="0.3_bi")  # 0.3
 
     global hangzhou_archive
     hangzhou_archive=False
     global TOP_K_ADJACENCY
-    TOP_K_ADJACENCY=5
+    TOP_K_ADJACENCY = 5
     global TOP_K_ADJACENCY_LANE
-    TOP_K_ADJACENCY_LANE=5
+    TOP_K_ADJACENCY_LANE = 5
     global NUM_ROUNDS
-    NUM_ROUNDS=100
+    NUM_ROUNDS = 100
     global EARLY_STOP
-    EARLY_STOP=False
+    EARLY_STOP = False
     global NEIGHBOR
     # TAKE CARE
-    NEIGHBOR=False
+    NEIGHBOR = False
     global SAVEREPLAY # if you want to relay your simulation, set it to be True
-    SAVEREPLAY=False
+    SAVEREPLAY = False
     global ADJACENCY_BY_CONNECTION_OR_GEO
     # TAKE CARE
     ADJACENCY_BY_CONNECTION_OR_GEO=False
 
-    #modify:TOP_K_ADJACENCY in line 154
+    # modify:TOP_K_ADJACENCY in line 154
     global PRETRAIN
-    PRETRAIN=False
-    parser.add_argument("--mod", type=str, default='CoLight')#SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
-    parser.add_argument("--cnt",type=int, default=3600)#3600
-    parser.add_argument("--gen",type=int, default=4)#4
+    PRETRAIN = False
+    parser.add_argument("--mod", type=str, default='CoLight')  # SimpleDQN,SimpleDQNOne,GCN,CoLight,Lit
+    parser.add_argument("--cnt", type=int, default=3600)  # 3600
+    parser.add_argument("--gen", type=int, default=4)  # 4
 
     parser.add_argument("-all", action="store_true", default=False)
-    parser.add_argument("--workers",type=int, default=7)
-    parser.add_argument("--onemodel",type=bool, default=False)
+    parser.add_argument("--workers", type=int, default=7)
+    parser.add_argument("--onemodel", type=bool, default=False)
 
     parser.add_argument("--visible_gpu", type=str, default="-1")
     global ANON_PHASE_REPRE
     tt=parser.parse_args()
     if 'CoLight_Signal' in tt.mod:
-        #12dim
-        ANON_PHASE_REPRE={
+        # 12dim
+        ANON_PHASE_REPRE = {
             # 0: [0, 0, 0, 0, 0, 0, 0, 0],
-            1: [0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1],# 'WSES',
-            2: [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1],# 'NSSS',
-            3: [1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1],# 'WLEL',
-            4: [0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1]# 'NLSL',
+            1: [0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1],  # 'WSES',
+            2: [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1],  # 'NSSS',
+            3: [1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1],  # 'WLEL',
+            4: [0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1]   # 'NLSL',
         }
     else:
-        #12dim
-        ANON_PHASE_REPRE={
+        # 12dim
+        ANON_PHASE_REPRE = {
             1: [0, 1, 0, 1, 0, 0, 0, 0],
             2: [0, 0, 0, 0, 0, 1, 0, 1],
             3: [1, 0, 1, 0, 0, 0, 0, 0],
@@ -85,7 +81,6 @@ def parse_args():
         }
     print('agent_name:%s',tt.mod)
     print('ANON_PHASE_REPRE:',ANON_PHASE_REPRE)
-    
 
     return parser.parse_args()
 
@@ -106,11 +101,13 @@ def memo_rename(traffic_file_list):
     new_name = new_name[:-1]
     return new_name
 
+
 def merge(dic_tmp, dic_to_change):
     dic_result = copy.deepcopy(dic_tmp)
     dic_result.update(dic_to_change)
 
     return dic_result
+
 
 def check_all_workers_working(list_cur_p):
     for i in range(len(list_cur_p)):
@@ -118,6 +115,7 @@ def check_all_workers_working(list_cur_p):
             return i
 
     return -1
+
 
 def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_path):
     ppl = Pipeline(dic_exp_conf=dic_exp_conf, # experiment config
@@ -132,23 +130,21 @@ def pipeline_wrapper(dic_exp_conf, dic_agent_conf, dic_traffic_env_conf, dic_pat
     return
 
 
-
 def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers, onemodel):
 
     # main(args.memo, args.env, args.road_net, args.gui, args.volume, args.ratio, args.mod, args.cnt, args.gen)
-    #Jinan_3_4
+    # Jinan_3_4
     NUM_COL = int(road_net.split('_')[0])
     NUM_ROW = int(road_net.split('_')[1])
     num_intersections = NUM_ROW * NUM_COL
-    print('num_intersections:',num_intersections)
+    print('num_intersections:', num_intersections)
 
     ENVIRONMENT = ["sumo", "anon"][env]
 
     if r_all:
-        traffic_file_list = [ENVIRONMENT+"_"+road_net+"_%d_%s" %(v,suffix) for v in range(100,400,100)]
+        traffic_file_list = [ENVIRONMENT+"_"+road_net+"_%d_%s" % (v, suffix) for v in range(100, 400, 100)]
     else:
         traffic_file_list=["{0}_{1}_{2}_{3}".format(ENVIRONMENT, road_net, volume, suffix)]
-
 
     if env:
         traffic_file_list = [i+ ".json" for i in traffic_file_list ]
@@ -156,7 +152,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
         traffic_file_list = [i+ ".xml" for i in traffic_file_list ]
 
     process_list = []
-    n_workers = workers     #len(traffic_file_list)
+    n_workers = workers  # len(traffic_file_list)
     multi_process = True
 
     global PRETRAIN
@@ -167,7 +163,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
 
             "RUN_COUNTS": cnt,
             "MODEL_NAME": mod,
-            "TRAFFIC_FILE": [traffic_file], # here: change to multi_traffic
+            "TRAFFIC_FILE": [traffic_file],  # here: change to multi_traffic
 
             "ROADNET_FILE": "roadnet_{0}.json".format(road_net),
 
@@ -185,6 +181,7 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "AGGREGATE": False,
             "DEBUG": False,
             "EARLY_STOP": EARLY_STOP,
+            "USE_FRAP": False  # change here to specify whether to use FRAP
         }
 
         dic_agent_conf_extra = {
@@ -193,10 +190,13 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
             "MAX_MEMORY_LEN": 10000,
             "UPDATE_Q_BAR_EVERY_C_ROUND": False,
             "UPDATE_Q_BAR_FREQ": 5,
+            "MERGE": "multiply",
             # network
-
             "N_LAYER": 2,
             "TRAFFIC_FILE": traffic_file,
+            "USE_FRAP": dic_exp_conf_extra['USE_FRAP'],
+            "PRIORITY": False,
+            "ROTATION_INPUT": True
         }
 
         global TOP_K_ADJACENCY
@@ -223,8 +223,6 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
 
             "NEIGHBOR": NEIGHBOR,
             "MODEL_NAME": mod,
-
-
 
             "SAVEREPLAY": SAVEREPLAY,
             "NUM_ROW": NUM_ROW,
@@ -268,8 +266,8 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # "terminal",
                 # "coming_vehicle",
                 # "leaving_vehicle",
-                # "pressure"
-
+                # "pressure",
+                # "pressure_of_movement",
                 # "adjacency_matrix",
                 # "lane_queue_length",
                 # "connectivity",
@@ -277,36 +275,35 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 # adjacency_matrix_lane
             ],
 
-                "DIC_FEATURE_DIM": dict(
-                    D_LANE_QUEUE_LENGTH=(4,),
-                    D_LANE_NUM_VEHICLE=(4,),
+            "DIC_FEATURE_DIM": dict(
+                D_LANE_QUEUE_LENGTH=(4,),
+                D_LANE_NUM_VEHICLE=(4,),
 
-                    D_COMING_VEHICLE = (12,),
-                    D_LEAVING_VEHICLE = (12,),
+                D_COMING_VEHICLE=(12,),
+                D_LEAVING_VEHICLE=(12,),
 
-                    D_LANE_NUM_VEHICLE_BEEN_STOPPED_THRES1=(4,),
-                    D_CUR_PHASE=(1,),
-                    D_NEXT_PHASE=(1,),
-                    D_TIME_THIS_PHASE=(1,),
-                    D_TERMINAL=(1,),
-                    D_LANE_SUM_WAITING_TIME=(4,),
-                    D_VEHICLE_POSITION_IMG=(4, 60,),
-                    D_VEHICLE_SPEED_IMG=(4, 60,),
-                    D_VEHICLE_WAITING_TIME_IMG=(4, 60,),
+                D_LANE_NUM_VEHICLE_BEEN_STOPPED_THRES1=(4,),
+                D_CUR_PHASE=(1,),
+                D_NEXT_PHASE=(1,),
+                D_TIME_THIS_PHASE=(1,),
+                D_TERMINAL=(1,),
+                D_LANE_SUM_WAITING_TIME=(4,),
+                D_VEHICLE_POSITION_IMG=(4, 60,),
+                D_VEHICLE_SPEED_IMG=(4, 60,),
+                D_VEHICLE_WAITING_TIME_IMG=(4, 60,),
 
-                    D_PRESSURE=(1,),
+                D_PRESSURE=(1,),
+                D_PRESSURE_OF_MOVEMENT=(8,),
+                D_ADJACENCY_MATRIX=(2,),
 
-                    D_ADJACENCY_MATRIX=(2,),
-
-                    D_ADJACENCY_MATRIX_LANE=(6,),
-
+                D_ADJACENCY_MATRIX_LANE=(6,),
                 ),
 
             "DIC_REWARD_INFO": {
-                "flickering": 0,#-5,#
+                "flickering": 0,  # -5
                 "sum_lane_queue_length": 0,
                 "sum_lane_wait_time": 0,
-                "sum_lane_num_vehicle_left": 0,#-1,#
+                "sum_lane_num_vehicle_left": 0,  # -1
                 "sum_duration_vehicle_left": 0,
                 "sum_num_vehicle_been_stopped_thres01": 0,
                 "sum_num_vehicle_been_stopped_thres1": -0.25,
@@ -319,12 +316,15 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 "STRAIGHT": 1
             },
 
+            "list_lane_order": ["WL", "WT", "EL", "ET", "SL", "ST", "NL", "NT"],
+            # this order should be consistent with the order defined in AnonEnv
+
             "PHASE": {
                 "sumo": {
-                    0: [0, 1, 0, 1, 0, 0, 0, 0],# 'WSES',
-                    1: [0, 0, 0, 0, 0, 1, 0, 1],# 'NSSS',
-                    2: [1, 0, 1, 0, 0, 0, 0, 0],# 'WLEL',
-                    3: [0, 0, 0, 0, 1, 0, 1, 0]# 'NLSL',
+                    0: [0, 1, 0, 1, 0, 0, 0, 0],  # 'WSES',
+                    1: [0, 0, 0, 0, 0, 1, 0, 1],  # 'NSSS',
+                    2: [1, 0, 1, 0, 0, 0, 0, 0],  # 'WLEL',
+                    3: [0, 0, 0, 0, 1, 0, 1, 0]   # 'NLSL',
                 },
 
                 # "anon": {
@@ -340,7 +340,16 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 #     # 'NSNL',
                 #     # 'SSSL',
                 # },
-                "anon":ANON_PHASE_REPRE,
+                "anon": [
+                    'WT_ET',
+                    'NT_ST',
+                    'WL_EL',
+                    'NL_SL',
+                    'WL_WT',
+                    'EL_ET',
+                    'SL_ST',
+                    'NL_NT',
+                ],
                 # "anon": {
                 #     # 0: [0, 0, 0, 0, 0, 0, 0, 0],
                 #     1: [0, 1, 0, 1, 0, 0, 0, 0],# 'WSES',
@@ -360,17 +369,17 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
         ## ==================== multi_phase ====================
         global hangzhou_archive
         if hangzhou_archive:
-            template='Archive+2'
-        elif volume=='jinan':
-            template="Jinan"
-        elif volume=='hangzhou':
-            template='Hangzhou'
-        elif volume=='newyork':
-            template='NewYork'
-        elif volume=='chacha':
-            template='Chacha'
-        elif volume=='dynamic_attention':
-            template='dynamic_attention'
+            template = 'Archive+2'
+        elif volume == 'jinan':
+            template = "Jinan"
+        elif volume == 'hangzhou':
+            template = 'Hangzhou'
+        elif volume == 'newyork':
+            template = 'NewYork'
+        elif volume == 'chacha':
+            template = 'Chacha'
+        elif volume == 'dynamic_attention':
+            template = 'dynamic_attention'
         elif dic_traffic_env_conf_extra["LANE_NUM"] == config._LS:
             template = "template_ls"
         elif dic_traffic_env_conf_extra["LANE_NUM"] == config._S:
@@ -386,12 +395,12 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 for i in range(4):
                     dic_traffic_env_conf_extra["LIST_STATE_FEATURE"].append(feature+"_"+str(i))
 
-        if mod in ['CoLight','GCN','SimpleDQNOne']:
+        if mod in ['CoLight', 'GCN', 'SimpleDQNOne']:
             dic_traffic_env_conf_extra["NUM_AGENTS"] = 1
             dic_traffic_env_conf_extra['ONE_MODEL'] = False
             if "adjacency_matrix" not in dic_traffic_env_conf_extra['LIST_STATE_FEATURE'] and \
                 "adjacency_matrix_lane" not in dic_traffic_env_conf_extra['LIST_STATE_FEATURE'] and \
-                mod not in ['SimpleDQNOne']:
+                    mod not in ['SimpleDQNOne']:
                 dic_traffic_env_conf_extra['LIST_STATE_FEATURE'].append("adjacency_matrix")
                 dic_traffic_env_conf_extra['LIST_STATE_FEATURE'].append("adjacency_matrix_lane")
                 if dic_traffic_env_conf_extra['ADJACENCY_BY_CONNECTION_OR_GEO']:
@@ -432,7 +441,6 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 dic_traffic_env_conf_extra['DIC_FEATURE_DIM']['D_LANE_NUM_VEHICLE_2'] = (4,)
                 dic_traffic_env_conf_extra['DIC_FEATURE_DIM']['D_CUR_PHASE_3'] = (1,)
                 dic_traffic_env_conf_extra['DIC_FEATURE_DIM']['D_LANE_NUM_VEHICLE_3'] = (4,)
-
 
         print(traffic_file)
         prefix_intersections = str(road_net)
@@ -482,13 +490,11 @@ def main(memo, env, road_net, gui, volume, suffix, mod, cnt, gen, r_all, workers
                 process_list[k].join()
                 print("traffic finish join", k)
 
-
     return memo
 
 
 if __name__ == "__main__":
     args = parse_args()
-    #memo = "multi_phase/optimal_search_new/new_headway_anon"
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.visible_gpu
 
